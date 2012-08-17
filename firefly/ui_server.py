@@ -1,9 +1,9 @@
 from __future__ import with_statement
-
+import hashlib
 import logging
 import os.path
-
-
+import sqlite3
+import sys
 import util
 
 import tornado.httpserver
@@ -35,7 +35,7 @@ class TokenHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "text/plain")
         self.write(util.generate_access_token(self.application.settings['secret_key']))
 
-
+class ShortenHandler(tornado.web.RequestHandler):
     """Stores state data and returns an ID for later retrieval"""
 
     def post(self):
@@ -48,7 +48,7 @@ class TokenHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "text/plain")
         self.write(util.b58encode(stateid))
 
-
+class ExpandHandler(tornado.web.RequestHandler):
     """Retrieves state data given an ID"""
 
     def get(self, b58id):

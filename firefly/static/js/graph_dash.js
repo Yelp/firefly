@@ -163,7 +163,7 @@ firefly.Dashboard.prototype.observeEvents = function() {
 					dataType: 'json',
 					success: function(data) {
 						dashboard.sync(data);
-
+					}
 				});
 			}
 		} else {
@@ -196,7 +196,7 @@ firefly.Dashboard.prototype.unpauseUpdates_ = function() {
 
 		dashboard.iterGraphs_(function(graph) {
 			graph.updateGraph();
-
+		});
 	}, this.REGULAR_REFRESH_INTERVAL);
 };
 
@@ -602,7 +602,7 @@ firefly.DashboardView.prototype.addTableRow = function(anchorRow, serializedGrap
 		for (var i=0; i < this.columnCount; i++ ) {
 			var cell = $('<td class="graph">');
 			cell.appendTo(row);
-
+		}
 	}
 	anchorRow && $(anchorRow).after(row) || $(this.tbody).prepend(row);
 

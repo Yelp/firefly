@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 import datetime
-
+import hashlib
 
 
 import re
@@ -9,7 +9,7 @@ import signal
 import simplejson as json
 import socket
 import sqlite3
-
+import sys
 import time
 import util
 
@@ -93,7 +93,7 @@ class GraphBaseHandler(tornado.web.RequestHandler):
                 'area_graph': area_graph}}
 
 
-
+class DataHandler(GraphBaseHandler):
     """Handler for json graph data"""
 
     @token_authed

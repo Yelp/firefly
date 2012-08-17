@@ -205,7 +205,7 @@ firefly.Renderer.prototype.positionGuide = function() {
 			} else {
 				return d.value + ' @ ' + renderer.longDateFormatter_(d.date);
 			}
-
+		});
 
 	// tooltip: position it by the mouse
 	d3.select(this.tooltip_)
@@ -261,7 +261,7 @@ firefly.Renderer.prototype.getDataCoords_ = function(layers, axes, timeAtMouseX)
 			if (Math.abs(thisPoint.x - localTimeAtMouseX) > Math.abs(lastPoint.x - localTimeAtMouseX)) {
 				closestDataIndexToTime -= 1;
 			}
-
+		}
 
 		// then translate that to a pixel coord by looking it up
 		// and getting the x value.
@@ -361,7 +361,7 @@ firefly.Renderer.prototype._redraw = function (data) {
 		var sub = [];
 		for (var i=0;i<data.currentLayers[j].data.length;i++){
 			sub.push(data.currentLayers[j].data[i].x);
-
+		}
 		this.lastData.currentLayersXAxes.push(sub);
 	}
 
@@ -370,7 +370,7 @@ firefly.Renderer.prototype._redraw = function (data) {
 		var sub = [];
 		for (var i=0;i<data.previousLayers[j].data.length;i++){
 			sub.push(data.previousLayers[j].data[i].x);
-
+		}
 		this.lastData.previousLayersXAxes.push(sub);
 	}
 

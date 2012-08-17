@@ -3,8 +3,8 @@ html, body {height:100%;padding:0; margin:0; overflow-y:auto;overflow-x:hidden;}
 html {font-family:"Inconsolata",sans-serif;background:#fff url(../img/stripez5.png);background:#222 url(../img/stripez4.png);}
 body, input {color:#666;}
 a, button.pseudo-link {color:#aaa;cursor:pointer;text-decoration:none;border:0;background:0;padding:0;}
-
-
+a:hover, button.pseudo-link:hover {color:#0cf;}
+a:focus, button.pseudo-link:focus, button.pseudo-link::-moz-focus-inner {outline:none;border:0;}
 
 /** main graph table **/
 .graphs {height:100%;}
@@ -14,7 +14,7 @@ a, button.pseudo-link {color:#aaa;cursor:pointer;text-decoration:none;border:0;b
 
 .graph .graph-content-container {overflow:hidden; position:relative;}
 #graphs .graph h2 {display:none;}
-
+.graph .graph-title {padding:5px;min-height:1em;}
 #graphs .graph .graph-title {z-index:0;position:absolute;background-color:rgba(32, 32, 32, 0.6);}
 .graph .actual-graph {line-height:0;}
 
@@ -24,16 +24,16 @@ a, button.pseudo-link {color:#aaa;cursor:pointer;text-decoration:none;border:0;b
 .legend .color {width:1em;height:1em;float:left;margin-right:2px;margin-bottom:5px;}
 .legend .sourcename {padding-left:5px;}
 
-
+/** graphedit dialog **/
 .graphedit {width:95%; min-width:916px; height:90%; min-height:500px;background:#222 url(../img/stripez4.png);border-radius:3px;box-shadow:5px 5px 10px #222;}
-
-
-
+.graphedit *::-webkit-scrollbar {width: 12px;}
+.graphedit *::-webkit-scrollbar-track {border-radius: 10px;-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);background-color: rgba(200, 200, 200, 0.2);}
+.graphedit *::-webkit-scrollbar-thumb {border-radius: 10px;-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.8);}
 
 .graphedit .pane {float:left;}
 .graphedit .controls > h2, .graphedit .temp-graph > h2 {border-left:1px solid #222;}
 .graphedit .pane > h2 {margin:0;padding:10px;border-bottom:1px solid #222;}
-
+.graphedit .pane > div {padding:0px 10px 0;margin-top:10px;overflow-y:auto;}
 
 .graphedit .data-sources {width:30%;}
 .graphedit .temp-graph {width:45%;}
@@ -43,29 +43,29 @@ a, button.pseudo-link {color:#aaa;cursor:pointer;text-decoration:none;border:0;b
 .graphedit .graph h2 {display:block;font-size:1.0em;margin-bottom:5px;}
 .graphedit .graph .graph-title-container, .graphedit .graph .graph-region-container {margin-bottom:10px;}
 .graphedit .graph .graph-title {position:static;}
-
-
+.graphedit .controls label:hover {cursor:pointer;color:#0cf;}
+.graphedit .controls span {margin-left:4px;}
 
 .graphedit .source-selector {cursor:move;background-color:rgba(200,200,200,0.2);margin-bottom:5px;padding:5px;border:1px solid #222;border-radius:3px;}
 .graphedit .source-selector:last-of-type {margin-bottom:0;}
-
+.graphedit select {float:left;clear:left;width:300px;}
 .graphedit .source-selector footer {clear:left;text-align:right;}
 .graphedit .source-selector footer button {margin-left:10px;}
-
+.graphedit .footer {position:absolute;bottom:10px;right:10px;}
 .graphedit .footer button {padding:10px;margin-left:10px;border:1px solid #222;border-radius:3px;}
+.graphedit .footer button[rel="save-edits"] {background-color:rgba(200,200,200,0.2)}
 
-
-
+/** context menu **/
 .contextmenu {position: absolute;font-size: 14px;cursor: default;white-space: nowrap;border-radius: 3px;background: #222;border: 1px solid #111;box-shadow: 2px 2px 5px #111;}
+.contextmenu span, .contextmenu a {padding: 2px 5px 2px 10px;}
+.contextmenu span.header {padding-left: 5px;}
+.contextmenu a {display: block;}
 
-
-
-
-
-
-
-
-
+/** SVG styles **/
+.line {fill: none;}
+.current {stroke-width: 1.5;}
+.previous {stroke-dasharray: 3,2;}
+.area {fill-opacity: 0.4;}
 
 .guide-line {stroke-width: 1; stroke: #aaa}
 .guide-dots circle {fill: red;}
@@ -76,11 +76,11 @@ a, button.pseudo-link {color:#aaa;cursor:pointer;text-decoration:none;border:0;b
 .guide-tooltip .historical {color: #aaa;}
 .guide-tooltip {white-space: nowrap;}
 
-
+.axis {shape-rendering: crispEdges;}
 .axis text {fill: #bbb;}
 .axis line {stroke: #444;}
-
-
+.x.axis line.minor {stroke-opacity: 0.5;}
+.axis .domain {fill: none;}
 
 .annotation {fill: none; stroke-width: 1; stroke: #ff3; stroke-opacity: 0.6;}
 .annotation-tooltip {position: absolute; background-color: #ff3; color: #000; padding: 2px;font-size:0.7em;font-weight:bold; opacity:0.7; white-space: nowrap; line-height:1; margin-left:10px;}

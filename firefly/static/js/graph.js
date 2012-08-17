@@ -207,7 +207,7 @@ firefly.Graph.prototype.setDOMAsPopulated = function() {
 	$(title).inplace({
 		'onSave': function(newTitle) {
 			that.setTitle(newTitle);
-
+		}
 	});
 	container.appendChild(title);
 	graphContainer.appendChild(container);
@@ -275,5 +275,5 @@ firefly.Graph.prototype.resizeGraph = function() {
 	if (this.renderer) {
 		this.renderer.resize();
 		this.renderer.render(this._sourcesNormalized, this.zoom, this._options);
-
+	}
 };

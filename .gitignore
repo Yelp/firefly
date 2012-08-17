@@ -1,5 +1,5 @@
 ._*
 *.pyc
-
+*.sqlite
 *.yaml
 !config.yaml.example

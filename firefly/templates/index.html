@@ -5,8 +5,8 @@
 		<link rel="stylesheet" type="text/css" href='{{ static_url("css/reset-min.css") }}'>
 		<style>
 			@font-face {
-
-
+				font-family: "Inconsolata";
+				src: url("{{ static_url("fonts/Inconsolata.ttf") }}");
 			}
 		</style>
 		<link href='{{ static_url("css/firefly.css") }}' rel='stylesheet' type='text/css'>
@@ -15,10 +15,10 @@
 	<body>
 		<div class="graphs" id="graphs"></div>
 		<script src="{{ static_url("d3/d3.v2.js") }}"></script>
-
+		<script src="{{ static_url("vendor/jquery-1.6.4.min.js") }}"></script>
 		<script src="{{ static_url("vendor/jquery.tools.min.js") }}"></script>
 		<script src="{{ static_url("vendor/jquery-ui-1.8.21.custom.min.js") }}"></script>
-
+		<script src="{{ static_url("vendor/jquery.ba-bbq.min.js") }}"></script>
 		<script src="{{ static_url("vendor/jquery.inplace-edit.js") }}"></script>
 		<script src="{{ static_url("vendor/chosen.jquery.min.js") }}"></script>
 		<script src="{{ static_url("vendor/closure_library/closure/goog/base.js") }}"></script>
