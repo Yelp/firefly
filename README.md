@@ -1,5 +1,4 @@
-# Firefly
-![Firefly logo](https://raw.github.com/Yelp/firefly/master/docs/firefly.png)
+# ![Firefly logo](https://raw.github.com/Yelp/firefly/master/docs/firefly-small.png) Firefly
 
 Firefly is a web application aimed at powerful, flexible time series graphing for web developers.
 
