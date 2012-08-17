@@ -29,7 +29,7 @@ firefly.SourceSelector.prototype._create = function(initial) {
 
 	// var sources = this._sources.getSources();
 	var select = this._createSelect(this._sources.getGraphRoot([]));
-
+	$(select).attr('data-placeholder', 'Select a Source');
 
 	if (initial) {
 		for (var i=0; i<initial.length; i++) {
@@ -56,13 +56,13 @@ firefly.SourceSelector.prototype._create = function(initial) {
 
 firefly.SourceSelector.prototype._createSubSelect = function(node) {
 	var select = this._createSelect(node.children);
-
+	$(this.container).inDOM() && $(select).chosen({'disable_search_threshold': 2});
 	return select;
 };
 
 firefly.SourceSelector.prototype._createSelect = function(entries) {
 	var select = document.createElement('select');
-
+	$(select).attr('data-placeholder', ' ');
 	var option = document.createElement('option');
 	option.value = '';
 	select.appendChild(option);

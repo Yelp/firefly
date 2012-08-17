@@ -44,11 +44,11 @@ firefly.init = function(dataServers, urlPathPrefix, dashboardContainer, isEmbedd
 		return true;
 	};
 
-
-
-
-
-
+	$.fn.unchosen = function () {
+		$(this).show().removeClass('chzn-done').removeAttr('id');
+		$(this).next().remove()
+		return $(this);
+	};
 
 	$.fn.inDOM = function() { return !!$(this).parents('html').length; };
 }(jQuery));

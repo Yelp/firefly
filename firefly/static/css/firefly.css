@@ -1,21 +1,21 @@
 /** global styles **/
 html, body {height:100%;padding:0; margin:0; overflow-y:auto;overflow-x:hidden;}
-
-
-
+html {font-family:"Inconsolata",sans-serif;background:#fff url(../img/stripez5.png);background:#222 url(../img/stripez4.png);}
+body, input {color:#666;}
+a, button.pseudo-link {color:#aaa;cursor:pointer;text-decoration:none;border:0;background:0;padding:0;}
 
 
 
 /** main graph table **/
 .graphs {height:100%;}
 .dashboard {width:100%; height:100%;border-spacing:0px; table-layout: fixed;}
-
-
+#graphs .graph {vertical-align:top;border:1px solid #222;overflow:hidden;}
+#graphs .graph.empty {vertical-align:middle;text-align:center;background-color:transparent;}
 
 .graph .graph-content-container {overflow:hidden; position:relative;}
 #graphs .graph h2 {display:none;}
 
-
+#graphs .graph .graph-title {z-index:0;position:absolute;background-color:rgba(32, 32, 32, 0.6);}
 .graph .actual-graph {line-height:0;}
 
 .legend {font-size:0.8em;padding:10px;}
@@ -25,14 +25,14 @@ html, body {height:100%;padding:0; margin:0; overflow-y:auto;overflow-x:hidden;}
 .legend .sourcename {padding-left:5px;}
 
 
-
+.graphedit {width:95%; min-width:916px; height:90%; min-height:500px;background:#222 url(../img/stripez4.png);border-radius:3px;box-shadow:5px 5px 10px #222;}
 
 
 
 
 .graphedit .pane {float:left;}
-
-
+.graphedit .controls > h2, .graphedit .temp-graph > h2 {border-left:1px solid #222;}
+.graphedit .pane > h2 {margin:0;padding:10px;border-bottom:1px solid #222;}
 
 
 .graphedit .data-sources {width:30%;}
@@ -46,17 +46,17 @@ html, body {height:100%;padding:0; margin:0; overflow-y:auto;overflow-x:hidden;}
 
 
 
-
+.graphedit .source-selector {cursor:move;background-color:rgba(200,200,200,0.2);margin-bottom:5px;padding:5px;border:1px solid #222;border-radius:3px;}
 .graphedit .source-selector:last-of-type {margin-bottom:0;}
 
 .graphedit .source-selector footer {clear:left;text-align:right;}
 .graphedit .source-selector footer button {margin-left:10px;}
 
+.graphedit .footer button {padding:10px;margin-left:10px;border:1px solid #222;border-radius:3px;}
 
 
 
-
-
+.contextmenu {position: absolute;font-size: 14px;cursor: default;white-space: nowrap;border-radius: 3px;background: #222;border: 1px solid #111;box-shadow: 2px 2px 5px #111;}
 
 
 
@@ -78,18 +78,18 @@ html, body {height:100%;padding:0; margin:0; overflow-y:auto;overflow-x:hidden;}
 
 
 .axis text {fill: #bbb;}
+.axis line {stroke: #444;}
 
 
 
+.annotation {fill: none; stroke-width: 1; stroke: #ff3; stroke-opacity: 0.6;}
+.annotation-tooltip {position: absolute; background-color: #ff3; color: #000; padding: 2px;font-size:0.7em;font-weight:bold; opacity:0.7; white-space: nowrap; line-height:1; margin-left:10px;}
 
+/** Dialog styles **/
+.ui-dialog-titlebar {background-color: #000;color: #fff;padding: 2px;}
+.ui-dialog-titlebar-close {float: right;}
+.ui-dialog-content {background-color: #fff;color: #000;	padding: 2px;}
+.ui-dialog-content a {color: #444;}
+.ui-dialog-content a:hover {color: #777;}
 
-
-
-
-
-
-
-
-
-
-
+.data-sources h2 small {vertical-align: 8%;}

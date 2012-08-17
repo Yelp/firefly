@@ -359,7 +359,7 @@ firefly.DashboardView.prototype.observeEvents = function() {
 		'container': this.container,
 		'menu': function(evt) {
 			return firefly.DashboardView.generateContextMenu_.apply(this, [that, evt]);
-
+		}
 	});
 
 	$(this.container).delegate('[rel^=action-edit-sources]', 'click', function(evt) {

@@ -70,17 +70,17 @@ firefly.Renderer.prototype._createSVG = function() {
 	this.xAxis = d3.svg.axis().orient("bottom").scale(this.xScale).tickSubdivide(true).tickPadding(6);
 	this.yAxis = d3.svg.axis().orient("right");
 
-
-
+	// check for null data
+	checkDiscontinuous = function(d) {return d.y !== null;}
 
 	// helpers for drawing our lines/areas
-
-
+	this.line = d3.svg.line().defined(checkDiscontinuous).interpolate("linear"); // use our custom interpolation for lines
+	this.previousLine = d3.svg.line().defined(checkDiscontinuous).interpolate("linear");
 	this.area = d3.svg.area().interpolate("linear"); // and linear interpolation for areas
 
 	// interpolator to figure out an index-to-color mapping
 	this.hsl = d3.interpolateHsl("hsl(0, 95%, 50%)", "hsl(360, 95%, 50%)");
-
+	this.annotation_line = d3.svg.area().defined(checkDiscontinuous).interpolate("linear");
 
 	// our svg root and the root transform
 	var svg = d3.select(this.container).append("svg:svg");
@@ -779,12 +779,12 @@ firefly.Renderer.prototype._pickAnnotationToolTipLocation = function(annotation,
 
 firefly.Renderer.prototype._linearTickFormat = function(domain, count) {
 	var prefix = d3.formatPrefix(Math.max(-domain[0], domain[1]));
-
+	var scaledDomain = domain.map(function(n) { return prefix.scale(n); });
 	var format = d3.scale.linear().domain(scaledDomain).tickFormat(count);
 
 	return function(value) {
 		if (value === 0) return "0";
-
+		return format(prefix.scale(value)) + prefix.symbol;
 	}
 };
 
