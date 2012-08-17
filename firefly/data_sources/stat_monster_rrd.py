@@ -1,14 +1,14 @@
+import os.path
+import re
+
+import rrdtool
+import ganglia_rrd
 
 
+ds_re = re.compile('^ds\[(.*)\]*].*')
 
 
-
-
-
-
-
-
-
+class StatMonsterRRD(ganglia_rrd.GangliaRRD):
     """Stats from StatMonster"""
 
     DESC = "StatMonster"

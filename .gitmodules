@@ -1,6 +1,6 @@
 [submodule "firefly/static/d3"]
 	path = firefly/static/d3
 
-
-
-
+[submodule "firefly/static/vendor/closure_library"]
+	path = firefly/static/vendor/closure_library
+	url = https://github.com/jarib/google-closure-library.git

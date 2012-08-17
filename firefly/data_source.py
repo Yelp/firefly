@@ -1,6 +1,6 @@
+import logging
 
-
-
+class DataSource(object):
     """Base class for Firefly Data Sources"""
 
     DESC = "Base class for Firefly Data Sources"

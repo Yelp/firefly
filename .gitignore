@@ -1,5 +1,5 @@
-
-
+._*
+*.pyc
 
 *.yaml
 !config.yaml.example

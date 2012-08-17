@@ -1,15 +1,28 @@
+/** global styles **/
+html, body {height:100%;padding:0; margin:0; overflow-y:auto;overflow-x:hidden;}
 
 
 
 
 
 
+/** main graph table **/
+.graphs {height:100%;}
+.dashboard {width:100%; height:100%;border-spacing:0px; table-layout: fixed;}
 
 
 
+.graph .graph-content-container {overflow:hidden; position:relative;}
+#graphs .graph h2 {display:none;}
 
 
+.graph .actual-graph {line-height:0;}
 
+.legend {font-size:0.8em;padding:10px;}
+.legend td {vertical-align:top;}
+.legend li {overflow:hidden;float:left;margin-right:10px;}
+.legend .color {width:1em;height:1em;float:left;margin-right:2px;margin-bottom:5px;}
+.legend .sourcename {padding-left:5px;}
 
 
 
@@ -17,15 +30,27 @@
 
 
 
+.graphedit .pane {float:left;}
 
 
 
 
+.graphedit .data-sources {width:30%;}
+.graphedit .temp-graph {width:45%;}
+.graphedit .controls {width:25%;}
+.graphedit h2 {font-size:1.2em;margin-bottom:10px;}
+.graphedit .graph.empty {display:none;}
+.graphedit .graph h2 {display:block;font-size:1.0em;margin-bottom:5px;}
+.graphedit .graph .graph-title-container, .graphedit .graph .graph-region-container {margin-bottom:10px;}
+.graphedit .graph .graph-title {position:static;}
 
 
 
 
+.graphedit .source-selector:last-of-type {margin-bottom:0;}
 
+.graphedit .source-selector footer {clear:left;text-align:right;}
+.graphedit .source-selector footer button {margin-left:10px;}
 
 
 
@@ -42,42 +67,17 @@
 
 
 
+.guide-line {stroke-width: 1; stroke: #aaa}
+.guide-dots circle {fill: red;}
+.guide-tooltip {position: absolute; background-color: #444; color: #eee; padding: 5px;border:1px solid #888;line-height:1em;}
+.guide-tooltip .swatch {width:10px !important;height:10px !important;}
+.guide-tooltip .swatch svg {width:10px;height:10px;}
+.guide-tooltip .value {padding-left:5px;}
+.guide-tooltip .historical {color: #aaa;}
+.guide-tooltip {white-space: nowrap;}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.axis text {fill: #bbb;}
 
 
 

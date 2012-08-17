@@ -1,10 +1,10 @@
 # Firefly
 
+Firefly is a web application aimed at powerful, flexible time series graphing for web developers.
 
+Firefly provides an interface for reading time series data from any number of server-side data stores and produces corresponding real-time graphs in a web browser. Multiple metrics can combine into a single graph, and graphs combine together in grids to form a Dashboard - which you can use to get a high-level view of your services.
 
-
-
-
+The current release ships with a DataSource that reads RRD files - specifically, those produced by Ganglia.  However it's simple to expand to other sources, from an in-house relational database to a cross-network API.
 
 ## Features
 
@@ -27,9 +27,9 @@ Firefly's configuration is formatted entirely as YAML. YAML is pretty easy to pi
 
 ### Data Sources
 
+The core of Firefly is the abstract concept of a DataSource. A DataSource just needs to expose a certain interface (methods to list available metrics, and get the data for a particular metric between particular timestamps) - beyond that, the system is datastore-agnostic and should be widely expandable.  We've included a DataSource for parsing Ganglia RRD files out of the box.  But Firefly is not just a front-end for Ganglia, and in time we'll be looking to release more of the metrics gathering tools we use behind Firefly.
 
-
-
+For Ganglia support, the [rrdcached integration wiki page](http://sourceforge.net/apps/trac/ganglia/wiki/rrdcached_integration) might be of use, as Firefly will work best if it speaks to `rrdcached` to protect your hard disks from getting hammered.
 
 ## Getting Started
 
@@ -43,13 +43,13 @@ _**Note:** Some configuration options can only be specified in your YAML configu
 
 ### How Firefly Runs in Production
 
+Firefly is divided into two parts: a **data server** and a **UI server**. How you deploy these parts of Firefly will depend on how your existing deployments are structured.
 
-
-
+The UI server is a thin wrapper that mostly serves static content, so you'll likely only run one of them.  The data server will be run wherever you need a local process to access stored metrics.  For instance, if you have Ganglia's RRD files stored on a single server in each of two datacenters, you'd want to run data servers on those same machines.  The UI server can be configured to know about both data servers, and the whole system will work from a unified interface.  Additionally, the UI server can be behind HTTP Basic Auth, and will use a mildly secure short-lived token to talk to the data servers - a necessity, since browsers don't elegantly support Basic Auth dialogs when doing CORS AJAX requests.
 
 ### Setting Up the Data Servers
 
-
+In your data server configuration files, you will want to specify `omit_ui_server: true`. This will instruct Firefly to **only start a data server** and _not_ a UI server. You will also want to be sure that the RRD socket and storage locations are set appropriately for any data sources you configure, including Ganglia.  You may also wish to change the port of the data server if you are running it behind a reverse proxy.
 
 ### Setting Up the UI Server
 

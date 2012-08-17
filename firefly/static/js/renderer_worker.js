@@ -10,14 +10,14 @@ var annotationsXHR;
 
 
 
-
-
-
-
-
-
-
-
+	// we treat the value 1 specially, since it depends on zoom level
+	// and we prefer it to be non-zero for evaluation in boolean contexts
+	if (data.options.overlay_previous_period == 1) {
+		data.offset = data.zoom
+	} else {
+		// this'll be null or some # of seconds
+		data.offset = data.options.overlay_previous_period;
+	}
 
 
 
@@ -27,7 +27,7 @@ var annotationsXHR;
 
 
 
-
+		previousXHR = fetchData(data.start - data.offset, data.end - data.offset);
 
 	if (data.options.show_annotations) {
 		annotationsXHR = fetchAnnotations(data.start, data.end);
@@ -62,7 +62,7 @@ function fetchAnnotations(start, end) {
 	xhr.onreadystatechange = handleResponse;
 	xhr.send(null);
 	return xhr;
-
+};
 
 
 	// handleResponse will get called again if the annotations XHR isn't ready and we want annotations data
@@ -117,6 +117,15 @@ function processData(currentData, previousData, annotationsData) {
 
 
 
+			var layer = {};
+			layer.data = []
+
+
+
+
+
+
+					var under = layers[l-1].data[i];
 
 
 
@@ -125,6 +134,7 @@ function processData(currentData, previousData, annotationsData) {
 
 
 
+				layer.data.push({"x": x, "y": y, "y0": y0});
 
 
 
@@ -133,19 +143,9 @@ function processData(currentData, previousData, annotationsData) {
 
 
 
+	for (var i=0; i<currentLayers.length; i++) currentLayers[i].shift = 0;
 
-
-
-
-
-
-
-
-
-
-
-
-
+	for (var i=0; i<previousLayers.length; i++) previousLayers[i].shift = data.offset * 1000;
 
 	// restructure annotations so we have the correct types for all the data
 	var annotations = []
@@ -162,7 +162,7 @@ function processData(currentData, previousData, annotationsData) {
 
 
 
-
+		"offset"         : data.offset,
 
 
 

@@ -1,44 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>firefly</title>
+
+		<style>
+			@font-face {
 
 
+			}
+		</style>
+		<link href='{{ static_url("css/firefly.css") }}' rel='stylesheet' type='text/css'>
+
+	</head>
+	<body>
+		<div class="graphs" id="graphs"></div>
+		<script src="{{ static_url("d3/d3.v2.js") }}"></script>
+
+		<script src="{{ static_url("vendor/jquery.tools.min.js") }}"></script>
 
 
+		<script src="{{ static_url("vendor/jquery.inplace-edit.js") }}"></script>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		<script src="{{ static_url("vendor/closure_library/closure/goog/base.js") }}"></script>
+		<script src="{{ static_url("js/jquery.contextmenu.js") }}"></script>
+		<script src="{{ static_url("js/firefly.js") }}"></script>
+		<script src="{{ static_url("js/graph.js") }}"></script>
+		<script src="{{ static_url("js/renderer.js") }}"></script>
+		<script src="{{ static_url("js/source_selector.js") }}"></script>
+		<script src="{{ static_url("js/graph_edit.js") }}"></script>
+		<script src="{{ static_url("js/graph_dash.js") }}"></script>
+		<script src="{{ static_url("js/sourcerer.js") }}"></script>
+		<script>
+			$(document).ready(function(){
+				firefly.init(
+					{{json_encode(data_servers)}},
+					{{json_encode(url_path_prefix)}},
+					document.getElementById('graphs'),
+					{{json_encode(embedded)}}
+				);
+			});
+		</script>
+	</body>
+</html>

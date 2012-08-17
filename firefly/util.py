@@ -1,13 +1,13 @@
 
 
+import logging
+import re
 
+from sys import modules
 
+last_dot_splitter_re = re.compile("((.*)\.)?([^\.]+)")
 
-
-
-
-
-
+def last_dot_splitter(dotted_path):
     """Split a string on the last dot.
 
     'aaa.bbb.ccc' => ('aaa.bbb', 'ccc')
@@ -16,7 +16,7 @@
     matches = last_dot_splitter_re.findall(dotted_path)
     return matches[0][1], matches[0][2]
 
-
+def import_module_class(dotted_path):
     """Import a module + class path like 'a.b.c.d' => d attribute of c module"""
     module_name, class_name = last_dot_splitter(dotted_path)
 
@@ -27,7 +27,7 @@
         raise AttributeError("Module %r has no class %r" % (mod, class_name))
     return attr
 
-
+def import_module(dotted_path):
     """Import a module path like 'a.b.c' => c module"""
     mod = __import__(dotted_path, globals(), locals(), [])
     for name in dotted_path.split('.')[1:]:
@@ -37,7 +37,7 @@
             raise AttributeError("Module %r has no attribute %r" % (mod, name))
     return mod
 
-
+def setup_logging(logger_name):
     """Sets up logging to stdout for a service script."""
     log = logging.getLogger(logger_name)
     log.setLevel(logging.INFO)

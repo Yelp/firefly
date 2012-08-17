@@ -1,4 +1,4 @@
-
+from __future__ import with_statement
 
 import datetime
 
@@ -6,20 +6,20 @@ import datetime
 
 import re
 import signal
-
+import simplejson as json
 import socket
 import sqlite3
 
-
+import time
 import util
 
-
+import yaml
 import tornado.httpclient
+import tornado.httpserver
+import tornado.ioloop
+import tornado.web
 
-
-
-
-
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 
@@ -32,7 +32,7 @@ import tornado.httpclient
         method(self)
     return new_method
 
-
+class SourcesHandler(tornado.web.RequestHandler):
     @token_authed
     def get(self):
         path = json.loads(self.get_argument('path'))
@@ -57,7 +57,7 @@ import tornado.httpclient
         return sourcelists
 
 
-
+class GraphBaseHandler(tornado.web.RequestHandler):
     """Base class implementing common ops"""
 
     def get_params(self):
@@ -111,7 +111,7 @@ import tornado.httpclient
         self.write(data)
 
 
-
+class GraphLegendHandler(GraphBaseHandler):
     """Handler for the legend data for a given graph"""
 
     @token_authed
@@ -125,7 +125,7 @@ import tornado.httpclient
         self.write(json.dumps({'legend': svc}))
 
 
-
+class GraphTitleHandler(GraphBaseHandler):
     """Handler for the title data for a given graph"""
 
     @token_authed
@@ -199,7 +199,7 @@ class AddAnnotationHandler(tornado.web.RequestHandler):
         self.write('pong\n')
 
 
-
+def parse_sources(sources, data_sources_by_key):
     data_source_name = sources[0][0]
     ds = data_sources_by_key[data_source_name]
     srcs = [source[1:] for source in sources]
