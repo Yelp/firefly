@@ -253,6 +253,7 @@
 
 
 
+		}
 
 
 
@@ -376,16 +377,21 @@
 
 
 
+		var annotations = div.select(".annotations").selectAll(".annotation").data(data.annotations);
+		annotations.enter().append("svg:line").attr("class", "annotation").attr('data-id', function(d){ return d.id; });
 
 
 
+		var annotation_tooltips = div.selectAll(".annotation-tooltip").data(data.annotations);
 
 
 
+				.attr('data-id', function(d){ return d.id; })
 
 
 
 
+				.attr('title', function(d){ return d.description; });
 
 
 
@@ -485,8 +491,16 @@
 
 
 
+			.y(function(d) {
+				if (d.y !== null) {
+					return that.yScale(d.y + d.y0);
+				}
+				else {
 
 
+					return d.y;
+				}
+			});
 
 
 
@@ -586,14 +600,19 @@
 
 
 
+		.attr("x1", function(d){ return renderer.xScale(d.time); })
+		.attr("x2", function(d){ return renderer.xScale(d.time); });
 
 
 
+			var label = d.type;
 
 
 
 
 
+		.style('top', function(d) { return (renderer._pickAnnotationToolTipLocation(d, this, data)[1]) + 'px'; })
+		.style('left', function(d) { return (renderer._pickAnnotationToolTipLocation(d, this, data)[0]) + 'px'; });
 
 
 
@@ -659,10 +678,13 @@
 
 
 
+	/**
 
 
+	 *
 
 
+	 */
 
 
 
@@ -675,6 +697,7 @@
 
 
 
+		}
 
 
 
@@ -713,6 +736,9 @@
 
 
 
+				}
+			}
+		}
 
 
 
@@ -733,9 +759,11 @@
 
 
 
+		}
 
 
 
+		}
 
 
 
@@ -784,35 +812,7 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		}
 
 
 

@@ -1,5 +1,5 @@
-
-
+[submodule "firefly/static/d3"]
+	path = firefly/static/d3
 
 
 

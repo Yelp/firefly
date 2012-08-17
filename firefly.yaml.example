@@ -1,73 +1,73 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+## Firefly example configuration
+##
+## Copy and customize this file in firefly.yaml or in an external location
+## (can be specified with -c, --config at run-time)
+##
+## Most of these options can be overridden on the command line as well.
+## See python -m firefly.main --help for more information
+
+# Whether or not we should omit starting the DATA SERVER
+omit_data_server: false
+# Whether or not we should omit starting the UI SERVER
+omit_ui_server: false
+
+# Secret key used to generate tokens for authentication with the dataserver
+# by the client. Be careful not to check this into your source code!
+secret_key: "DEBUG"
+
+# Options related to the DATA SERVER
+data_server:
+
+    # Port for the DATA SERVER to listen on
+    port: 8890
+
+    # The data sources to collect data from.
+    # These are Python modules contained in data_sources/
+    data_sources:
+        - data_sources.ganglia_rrd.GangliaRRD
+        - data_sources.stat_monster_rrd.StatMonsterRRD
+
+    # Configuration for the selected data sources
+    # Gets passed as kwargs to the DataSource constructor
+    data_source_config:
+        # Both of these datasources rely on an rrdcached to be present so that
+        # they can read entries from RRDs. Set these to something other than
+        # null or firefly will crash.
+        data_sources.ganglia_rrd.GangliaRRD:
+            rrdcached_socket: null
+            rrdcached_storage: null
+        data_sources.stat_monster_rrd.StatMonsterRRD:
+            # Location of the rrdcached socket file
+            rrdcached_socket: null
+            # Location of the rrdcached storage file
+            rrdcached_storage: null
+
+    # The location of the SQLite database file which contains the data store
+    # for the DATA SERVER
+    db_file: "data/data_server.sqlite"
+
+# Options related to the UI SERVER
+ui_server:
+
+    # Port for the UI SERVER to listen on
+    port: 8889
+
+    # Firefly DATA SERVERs to connect to for data.
+    # If --no-data-server is specified, this option should be specified.
+    # Otherwise, if both a DATA SERVER and a UI SERVER are being run,
+    # the local DATA SERVER will be added to this list.
+    # Uncomment this option and replace it with the location of your DATA SERVER
+    # when you are ready to run outside of --testing mode.
+    #data_servers:
+    #    - name: "http://some_host:8890/"
+    #      desc: that_one_datacenter
+
+    # The SQLite database file to keep UI SERVER data in
+    db_file: "data/ui_server.sqlite"
+
+    # Should we enable Javascript logging?
+    js_logging_enabled: false
+
+    # The URL prefix to use OUTSIDE of --testing mode.
+    # Note that this is just / in --testing mode.
+    url_path_prefix: "/firefly/"
