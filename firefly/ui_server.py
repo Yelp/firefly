@@ -10,8 +10,8 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 
-
-
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+log = logging.getLogger('firefly_ui_server')
 
 class IndexHandler(tornado.web.RequestHandler):
     """Serves the basic dashboard page"""

@@ -2,8 +2,8 @@ from __future__ import with_statement
 
 import datetime
 import hashlib
-
-
+import logging
+import os
 import re
 import signal
 import simplejson as json
@@ -20,9 +20,9 @@ import tornado.ioloop
 import tornado.web
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+log = logging.getLogger('firefly_data_server')
 
-
-
+DEFAULT_DATA_SERVER_PORT = 8890
 
 def token_authed(method):
     def new_method(self):
