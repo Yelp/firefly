@@ -35,9 +35,8 @@ class TestData(firefly.data_source.DataSource):
                     else:
                         disc = sine/2
                     val.append(disc)
-            if any(val):
-                values_string = ",".join("%0.4f"%(v,) if v else "null" for v in val)
-                data.append('{"t":%d,"v":[%s]}' % (t, values_string))
+            values_string = ",".join("%0.4f"%(v,) if v else "null" for v in val)
+            data.append('{"t":%d,"v":[%s]}' % (t, values_string))
         return "[%s]" % ','.join(data)
 
     def legend(self, sources):
