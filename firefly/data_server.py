@@ -24,7 +24,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 
-
+def token_authed(method):
     def new_method(self):
         token = self.get_argument('token')
         if not util.verify_access_token(token, self.application.settings['secret_key']):
@@ -192,7 +192,7 @@ class AddAnnotationHandler(tornado.web.RequestHandler):
         # It's comforting to know things went alright
         self.write(json.dumps({"status": "ok"}))
 
-
+class PingHandler(GraphBaseHandler):
     """Handler for monitoring"""
 
     def get(self):

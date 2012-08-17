@@ -28,7 +28,7 @@ class IndexHandler(tornado.web.RequestHandler):
 
         self.render("templates/index.html", **env)
 
-
+class TokenHandler(tornado.web.RequestHandler):
     """Generate tokens"""
 
     def get(self):
