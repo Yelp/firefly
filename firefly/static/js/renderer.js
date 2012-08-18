@@ -268,16 +268,23 @@ firefly.Renderer.prototype.getDataCoords_ = function(layers, axes, timeAtMouseX)
 		var closestPoint = layer.data[closestDataIndexToTime];
 		var closestDataPointX = this.xScale(closestPoint.x + layer.shift);
 
-		var yVal = closestPoint.y + closestPoint.y0;
+		var dotX = dotY = null;
+		var yVal = (closestPoint.y + closestPoint.y0).toFixed(3);
+		if (closestPoint.y !== null) {
+			dotX = closestDataPointX;
+			dotY = this.yScale(yVal);
+		}
+		else {
+			yVal = 'undef';
+		}
 		dataPoints.push({
-			'dotX': closestDataPointX,
-			'dotY': this.yScale(yVal),
+			'dotX': dotX,
+			'dotY': dotY,
 			'date': new Date(closestPoint.x),
-			'value': yVal.toFixed(3)
+			'value': yVal
 		});
 
 	}
-
 	return dataPoints;
 };
 
