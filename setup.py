@@ -11,8 +11,8 @@ setup(
     Firefly works with both the Ganglia and Statmonster data sources.
     """,
     requires=[
-        "tornado >= 1.1",
-        "pyyaml >= 3.09",
-        "python-rrdtool >= 1.4.7"
+        "tornado (>=1.1)",
+        "pyyaml (>=3.09)",
+        "rrdtool (>=1.4.7)"
     ]
 )
