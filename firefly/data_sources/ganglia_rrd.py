@@ -82,9 +82,8 @@ class GangliaRRD(firefly.data_source.DataSource):
                 for v in row.findall("v"):
                     value = float(v.text)
                     values.append("%g" % value if not math.isnan(value) else None)
-                if any(values):
-                    values_string = ",".join(v if v else "null" for v in values)
-                    data.append('{"t":%d,"v":[%s]}' % (time, values_string))
+                values_string = ",".join(v if v else "null" for v in values)
+                data.append('{"t":%d,"v":[%s]}' % (time, values_string))
         except Exception, e:
             raise tornado.web.HTTPError(500, log_message=str(e))
 
