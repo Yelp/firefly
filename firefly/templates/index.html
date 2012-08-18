@@ -33,10 +33,10 @@
 		<script>
 			$(document).ready(function(){
 				firefly.init(
-					{{json_encode(data_servers)}},
-					{{json_encode(url_path_prefix)}},
+					{% raw json_encode(data_servers) %},
+					{% raw json_encode(url_path_prefix) %},
 					document.getElementById('graphs'),
-					{{json_encode(embedded)}}
+					{% raw json_encode(embedded) %}
 				);
 			});
 		</script>
