@@ -41,14 +41,7 @@ class TestData(firefly.data_source.DataSource):
 
     def legend(self, sources):
         sources = self._flat_sources(sources)
-        titles = []
-        for source in sources:
-            if source == 'test-data-plain':
-                titles.append([["test-data-plain"], "#ff0000"])
-            if source == 'test-data-moving':
-                titles.append([["test-data-moving"], "#ff0000"])
-            if source == 'test-data-discontinuous':
-                titles.append([["test-data-discontinuous"], "#ff0000"])
+        titles = [[[source], "#ff0000"] for source in sources]
         return titles
 
     def _flat_sources(self, sources):
