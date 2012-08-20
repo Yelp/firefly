@@ -119,10 +119,14 @@ function processData(currentData, previousData, annotationsData) {
 		for (var l=0; l<layerCount; l++) {
 			var layer = {};
 			layer.data = []
+			var alpha = 0.8 / data.options.smooth_alpha;
 
 			for (var i=0; i<data.length; i++) {
 				var x = data[i].t * 1000;
 				var y = data[i].v[l];
+				if (data.options.smooth && i > 0 && y !== null) {
+					y = layer.data[i-1].y + alpha * (data[i].v[l] - layer.data[i-1].y);
+				}
 
 				if (l > 0 && stackLayers) {
 					var under = layers[l-1].data[i];
@@ -136,7 +140,6 @@ function processData(currentData, previousData, annotationsData) {
 				min = Math.min(total, min);
 				layer.data.push({"x": x, "y": y, "y0": y0});
 			}
-
 			layers.push(layer);
 		}
 
