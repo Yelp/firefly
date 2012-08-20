@@ -251,6 +251,12 @@ firefly.GraphEdit.prototype.controls = [
 		{'name': 'short_annotations', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Short Annotations'},
 		]},
+		{'name': 'smooth', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
+			{'value': '1', 'label': 'Smoothing'},
+		]},
+		{'name': 'smooth_alpha', 'inputType': 'range', 'valueType': 'float', 'items': [
+			{'value': '1.0', 'label': 'Smoothing Amount'},
+		]},
 		{'name': 'y_axis_clamp', 'inputType': 'number', 'valueType': 'float', 'items': [
 			{'value': undefined, 'label': 'Y Axis Clamp'},
 		]}
@@ -294,6 +300,9 @@ firefly.GraphEdit.prototype.getControls = function(graphOptions) {
 						input.prop('checked', true);
 					}
 				} else if (group.inputType == 'number') {
+					input.prop('value', graphOptions[group.name])
+				} else if (group.inputType == 'range') {
+					input.attr({'min': 1.1, 'max': 4.0, 'step:': 0.1});
 					input.prop('value', graphOptions[group.name])
 				}
 			});
