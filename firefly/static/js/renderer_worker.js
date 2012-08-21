@@ -115,7 +115,7 @@ function processData(currentData, previousData, annotationsData) {
 	// and optionally stack the layers
 	function extractLayers(data) {
 		var layers = [];
-		var alpha = 8 / Math.pow(10, self.data.options.smooth_alpha);
+		var alpha = 8 / Math.pow(10, self.data.options.smooth_alpha/100);
 
 		for (var l=0; l<layerCount; l++) {
 			var layer = {};

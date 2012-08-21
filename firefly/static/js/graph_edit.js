@@ -251,14 +251,14 @@ firefly.GraphEdit.prototype.controls = [
 		{'name': 'short_annotations', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Short Annotations'},
 		]},
+		{'name': 'y_axis_clamp', 'inputType': 'number', 'valueType': 'float', 'items': [
+			{'value': undefined, 'label': 'Y Axis Clamp'},
+		]},
 		{'name': 'smooth', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Smoothing'},
 		]},
 		{'name': 'smooth_alpha', 'inputType': 'range', 'valueType': 'float', 'items': [
-			{'value': '1.0', 'label': 'Smoothing Amount'},
-		]},
-		{'name': 'y_axis_clamp', 'inputType': 'number', 'valueType': 'float', 'items': [
-			{'value': undefined, 'label': 'Y Axis Clamp'},
+			{'value': 200, 'min': 100, 'max': 400, 'label': 'Smoothing Amount'},
 		]}
 	]}
 ];
@@ -270,7 +270,8 @@ firefly.GraphEdit.prototype.getControls = function(graphOptions) {
 		$.each(section.groups, function(j, group) {
 			var groupDiv = $('<div>').appendTo(frag);
 			$.each(group.items, function(k, item) {
-				var itemDiv = $('<div>').appendTo(groupDiv)
+				var itemDiv = $('<div>').appendTo(groupDiv);
+				itemDiv.addClass('control');
 				var label = $('<label>').appendTo(itemDiv);
 				var input = $('<input>').attr({'type': group.inputType, 'name': group.name, 'value': item.value}).appendTo(label);
 				input.data('valueType', group.valueType);
@@ -302,8 +303,7 @@ firefly.GraphEdit.prototype.getControls = function(graphOptions) {
 				} else if (group.inputType == 'number') {
 					input.prop('value', graphOptions[group.name])
 				} else if (group.inputType == 'range') {
-					input.attr({'min': 1.1, 'max': 4.0, 'step:': 0.1});
-					input.prop('value', graphOptions[group.name])
+					input.attr({'value': graphOptions[group.name]});
 				}
 			});
 		});
