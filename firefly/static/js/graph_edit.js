@@ -258,7 +258,7 @@ firefly.GraphEdit.prototype.controls = [
 			{'value': '1', 'label': 'Smoothing'},
 		]},
 		{'name': 'smooth_alpha', 'inputType': 'range', 'valueType': 'float', 'items': [
-			{'value': 200, 'min': 100, 'max': 400, 'label': 'Smoothing Amount'},
+			{'value': '200', 'min': '100', 'max': '400', 'label': 'Smoothing Amount'},
 		]}
 	]}
 ];
@@ -303,7 +303,7 @@ firefly.GraphEdit.prototype.getControls = function(graphOptions) {
 				} else if (group.inputType == 'number') {
 					input.prop('value', graphOptions[group.name])
 				} else if (group.inputType == 'range') {
-					input.attr({'value': graphOptions[group.name]});
+					input.attr({'min': item.min, 'max': item.max, 'value': graphOptions[group.name]});
 				}
 			});
 		});
