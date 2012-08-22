@@ -86,6 +86,28 @@ class RedirectHandler(tornado.web.RequestHandler):
             url += "?embed=true"
         self.redirect(url + '#!' + fragment)
 
+class NameHandler(tornado.web.RequestHandler):
+    """Handles storing and retrieving named dashboards"""
+
+    def post(self, name):
+        conn = self.application.settings['db_connection']
+        stateid = util.b58decode(unicode(self.request.body, 'utf_8'))
+        conn.execute("insert or replace into names (name, stateid) values (?, ?)", (name, stateid))
+
+        # TODO: make the content-type json
+        self.set_header("Content-Type", "text/plain")
+        self.write('{success: true}')
+
+    def get(self, name):
+        conn = self.application.settings['db_connection']
+        state = conn.execute("select state from states where id = (select stateid from names where name = ?)", (name,)).fetchone()
+
+        if state:
+            self.set_header("Content-Type", "application/json; charset=UTF-8")
+            self.write(state[0])
+        else:
+            self.set_header("Content-Type", "text/plain")
+            self.write('{success: false}')
 
 def initialize_ui_server(config, secret_key=None, ioloop=None):
     if not ioloop:
@@ -95,6 +117,8 @@ def initialize_ui_server(config, secret_key=None, ioloop=None):
     conn = sqlite3.connect(config['db_file'], isolation_level=None)
     conn.execute("create table if not exists states (id integer primary key autoincrement, state text not null, state_hash blob not null)")
     conn.execute("create index if not exists hash_idx on states(state_hash)")
+    conn.execute("create table if not exists names (id integer primary key autoincrement, name text not null, stateid text not null)")
+    conn.execute("create unique index if not exists name_idx on names (name)")
 
     config["static_path"] = os.path.join(os.path.join(*os.path.split(__file__)[:-1]), 'static')
     config["db_connection"] = conn
@@ -108,6 +132,7 @@ def initialize_ui_server(config, secret_key=None, ioloop=None):
         (r"/shorten", ShortenHandler),
         (r"/expand/(.*)", ExpandHandler),
         (r"/redirect/(.*)", RedirectHandler),
+        (r"/named/(.*)", NameHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": config['static_path']}),
     ], **config)
 
