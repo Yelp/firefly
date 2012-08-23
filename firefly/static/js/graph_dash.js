@@ -446,12 +446,8 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 						var loc = $(location).attr('href');
 						var nurl = $.param.querystring(loc, 'embed=true');
 						nurl = $.param.fragment(nurl, '!' + data,2);
-						$('<div></div>')
-						.html('<a href="'+nurl+'">'+nurl+'</a>')
-						.dialog({'title':'Embed url (paste in an iframe to embed)',
-							 'width':400,
-							 'height':90,
-							 'modal':true});
+						var link = '<a href="'+nurl+'">'+nurl+'</a>'
+						new firefly.GraphModal({'title': 'Embed url (paste in an iframe to embed)', 'content': link});
 					}
 				});
 			}}
@@ -500,7 +496,12 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 			{'label': "5 Col", 'action': function() {instance.controller.setColumnCount(5);}}
 		]},
 		{'label': "Save to Name", 'action': function() {
-			alert("There will be a dialogue box here");
+			new firefly.GraphModal({'title': 'Save to Name',
+						'content': 'There will be a textbox here!',
+						'actions': [
+							{'name': 'Cancel', 'action': 'close'},
+							{'name': 'Save', 'action': function(){ alert('woo!');}}
+						]});
 		}},
 		{'label': "Make Zoom Global", 'action': function() {
 			var from = $(evt.target).retrieveGraph();
