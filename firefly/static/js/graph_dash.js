@@ -450,7 +450,7 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 						.html('<a href="'+nurl+'">'+nurl+'</a>')
 						.dialog({'title':'Embed url (paste in an iframe to embed)',
 							 'width':400,
-							 'height':50,
+							 'height':90,
 							 'modal':true});
 					}
 				});
@@ -499,6 +499,9 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 			{'label': "4 Col", 'action': function() {instance.controller.setColumnCount(4);}},
 			{'label': "5 Col", 'action': function() {instance.controller.setColumnCount(5);}}
 		]},
+		{'label': "Save to Name", 'action': function() {
+			alert("There will be a dialogue box here");
+		}},
 		{'label': "Make Zoom Global", 'action': function() {
 			var from = $(evt.target).retrieveGraph();
 			from && $('.graph').each( function() {
