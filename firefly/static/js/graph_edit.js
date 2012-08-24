@@ -65,30 +65,30 @@ firefly.GraphEdit.prototype.logger_ = null;
  * observe events on children of the edit pane
  */
 firefly.GraphEdit.prototype.observeEvents = function() {
-	var that = this;
+	var graphEdit = this;
 
 	$(document).bind("keydown", function(evt) {
 		// listen for the esc key, close without saving
-		if (evt.which == 27) that.close(false);
+		if (evt.which == 27) graphEdit.close(false);
 	});
 
 	$(this._container).delegate('[rel=cancel-edits]', 'click', function(evt) {
 		// close without saving the graph
-		that.close(false);
+		graphEdit.close(false);
 	});
 
 	$(this._container).delegate('[rel=save-edits]', 'click', function(evt) {
 		// close and save the graph
-		that.close(true);
+		graphEdit.close(true);
 	});
 
 	$(this._container).delegate('[rel=dir] span', 'click', function(evt) {
 		var target = $(evt.target).parent().get(0);
 		if ($(target).attr('rel') == 'dir') {
 			if ($(target).hasClass('open')) {
-				that.closeGraphDir(target);
+				graphEdit.closeGraphDir(target);
 			} else {
-				that.openGraphDir(target);
+				graphEdit.openGraphDir(target);
 			}
 		}
 	});
@@ -98,29 +98,42 @@ firefly.GraphEdit.prototype.observeEvents = function() {
 		var idx = $(".source-selector").filter(function() {
 			return $(this).data('ff:selected-source');
 		}).index(this);
-		that.graph.addSource(key, idx);
+		graphEdit.graph.addSource(key, idx);
 	});
 	$(this._container).delegate(".source-selector", "ff:remove-source", function(evt, key) {
 		var idx = $(".source-selector").filter(function() {
 			return $(this).data('ff:selected-source');
 		}).index(this);
-		that.graph.removeSource(idx);
+		graphEdit.graph.removeSource(idx);
 	});
 
-	/** events for managing the source selectors themselves **/
+	// handle the "add" button to add a new, blank SourceSelector
 	$(this._container).delegate('[rel=add-source-selector-below]', 'click', function(evt) {
 		var next = $(this).closest('.source-selector').next('.source-selector');
-		that.addSourceSelector(null, next.length ? next.get(0) : null);
+		graphEdit.addSourceSelector(null, next.length ? next.get(0) : null);
 	});
+
+	// handle the "clone" button to clone this SourceSelector
 	$(this._container).delegate('[rel=clone-source-selector-below]', 'click', function(evt) {
 		var ss = $(this).closest('.source-selector').get(0);
 		var next = $(ss).next('.source-selector');
 		var currentSrc = $(ss).data('ff:selected-source');
-		var newss = that.addSourceSelector(currentSrc, next.length ? next.get(0) : null);
+		var newss = graphEdit.addSourceSelector(currentSrc, next.length ? next.get(0) : null);
 		currentSrc && $(newss).trigger('ff:add-source', [currentSrc]);
 	});
+
+	// handle the "remove" button - if we're removing the last SourceSelector, create a new one
 	$(this._container).delegate('[rel=remove-source-selector]', 'click', function(evt) {
-		that.addSourceSelector(null, $(this).closest('.source-selector').get(0));
+		// for some reason, this query finds the "current" .source-selector, even though
+		// it should have been removed already by the SourceSelector itself while getting
+		// a first crack at handling this event.
+		var parent = $(this).closest('.source-selector').get(0);
+		var otherSelectors = $(graphEdit._container).find('.source-selector').filter(function(idx) {
+			return (this !== parent);
+		});
+		if (otherSelectors.length === 0) {
+			graphEdit.addSourceSelector();
+		}
 	});
 };
 
