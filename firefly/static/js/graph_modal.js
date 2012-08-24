@@ -12,7 +12,8 @@ firefly.GraphModal = function(options) {
 	var defaults = {
 		'title': 'Firefly',
 		'actions': [],
-		'contents': undefined
+		'contents': undefined,
+		'footer': undefined
 	};
 
 	options = $.extend(defaults, options);
@@ -39,6 +40,11 @@ firefly.GraphModal = function(options) {
 		// load it immediately after the construction
 		load: true
 	});
+
+	var inp = $(this._container).find('input');
+	if (inp) {
+		inp[0].focus();
+	}
 }
 
 /**
@@ -64,7 +70,7 @@ firefly.GraphModal.prototype.observeEvents = function() {
 		that.close(false);
 	});
 
-	$(this._container).delegate('[rel=close]', 'click', function(evt) {
+	$(this._container).delegate('[rel=modal-close]', 'click', function(evt) {
 		that.close(false);
 	});
 };
@@ -81,7 +87,7 @@ firefly.GraphModal.prototype.close = function(save) {
 firefly.GraphModal._domTemplate = $([
 	"<div class='graphmodal'>",
 		"<div class='header'>",
-		"<button class='pseudo-link' rel='close'>x</button>",
+		"<button class='pseudo-link' rel='modal-close'>x</button>",
 		"</div>",
 		"<div class='content'>",
 		"</div>",
@@ -101,18 +107,22 @@ firefly.GraphModal.prototype.createDOM = function(options) {
 
 	header.append($('<h2>').text(options.title));
 	content.append(options.content);
+	footer.append(options.footer);
 
+	var that = this;
 	$.each(options.actions, function(idx, action) {
 		var button = $('<button>');
 		button.addClass('pseudo-link');
 		button.text(action.name);
-		if (action.action == 'close') {
+		if (action.type == 'close') {
+			button.addClass('close');
 			button.attr('rel', 'cancel');
 		}
 		else {
+			button.addClass(action.type);
 			button.click(action.action);
 		}
-		footer.append(button);
+		options.footer.append(button);
 	});
 
 	return div;

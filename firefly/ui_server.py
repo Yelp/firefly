@@ -5,6 +5,7 @@ import os.path
 import sqlite3
 import sys
 import util
+import json
 
 import tornado.httpserver
 import tornado.ioloop
@@ -89,13 +90,24 @@ class RedirectHandler(tornado.web.RequestHandler):
 class NameHandler(tornado.web.RequestHandler):
     """Handles storing and retrieving named dashboards"""
 
-    def post(self, name):
+    def put(self, name):
+        if not name:
+            self.set_status(500)
+            self.write('Name cannot be empty');
+            return
         conn = self.application.settings['db_connection']
-        stateid = util.b58decode(unicode(self.request.body, 'utf_8'))
-        conn.execute("insert or replace into names (name, stateid) values (?, ?)", (name, stateid))
+        req = json.loads(self.request.body)
+        b58id = req['frag'].lstrip('#!')
+        stateid = util.b58decode(b58id)
+        if not req['confirmed']:
+            exists = conn.execute("select * from names where name = ?", (name,)).fetchone()
+            if exists:
+                self.set_status(409)
+                self.write('This name is already stored.  Are you sure you want to overwrite it?')
+                return
 
-        self.set_header("Content-Type", "application/json")
-        self.write('{success: true}')
+        conn.execute("insert or replace into names (name, stateid) values (?, ?)", (name, stateid))
+        return
 
     def get(self, name):
         conn = self.application.settings['db_connection']
