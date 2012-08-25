@@ -521,8 +521,8 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 					async: true,
 					contentType: 'application/json',
 					data: JSON.stringify({'frag': $(location).attr('hash'), 'confirmed': $('.graphmodal button.save').hasClass('confirm')}),
-					success: function() {
-						var namedurl = $(location).attr('protocol') + '//' + $(location).attr('host') + instance.controller.makeURL_('named/' + namebox.val())
+					success: function(jqXHR) {
+						var namedurl = $(location).attr('protocol') + '//' + $(location).attr('host') + '/named/' + jqXHR;
 						flash.html('<p class="success">This dashboard is: </p>');
 						flash.append($('<a>').attr('href', namedurl).text(namedurl));
 						footer.empty().html('<button rel="modal-close" class="pseudo-link">Close</button>');

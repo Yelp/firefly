@@ -6,6 +6,7 @@ import sqlite3
 import sys
 import util
 import json
+import re
 
 import tornado.httpserver
 import tornado.ioloop
@@ -95,6 +96,7 @@ class NameHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write('Name cannot be empty');
             return
+        name = re.sub('\s', '-', name)
         conn = self.application.settings['db_connection']
         req = json.loads(self.request.body)
         b58id = req['frag'].lstrip('#!')
@@ -107,6 +109,7 @@ class NameHandler(tornado.web.RequestHandler):
                 return
 
         conn.execute("insert or replace into names (name, stateid) values (?, ?)", (name, stateid))
+        self.write(name)
         return
 
     def get(self, name):
