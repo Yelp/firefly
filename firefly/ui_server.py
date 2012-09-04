@@ -13,6 +13,19 @@ import tornado.web
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log = logging.getLogger('firefly_ui_server')
 
+
+def shorten(state, db_conn):
+    """Returns the b58encoded id of the provided full firefly
+    state description. Creates a new entry for state if one
+    doesn't already exist in the db.
+    """
+    state = unicode(state, 'utf_8')
+    state_hash = buffer(hashlib.sha1(state.encode('utf_8')).digest())
+    row = db_conn.execute("select id from states where state_hash=?", (state_hash,)).fetchone()
+    stateid = row[0] if row else db_conn.execute("insert into states(state, state_hash) values (?, ?)", (state, state_hash)).lastrowid
+    return util.b58encode(stateid)
+
+
 class IndexHandler(tornado.web.RequestHandler):
     """Serves the basic dashboard page"""
 
@@ -40,13 +53,9 @@ class ShortenHandler(tornado.web.RequestHandler):
 
     def post(self):
         conn = self.application.settings['db_connection']
-        state = unicode(self.request.body, 'utf_8')
-        state_hash = buffer(hashlib.sha1(state.encode('utf_8')).digest())
-        row = conn.execute("select id from states where state_hash=?", (state_hash,)).fetchone()
-        stateid = row[0] if row else conn.execute("insert into states(state, state_hash) values (?, ?)", (state, state_hash)).lastrowid
-
+        stateid = shorten(self.request.body, conn)
         self.set_header("Content-Type", "text/plain")
-        self.write(util.b58encode(stateid))
+        self.write(stateid)
 
 class ExpandHandler(tornado.web.RequestHandler):
     """Retrieves state data given an ID"""
@@ -64,6 +73,18 @@ class ExpandHandler(tornado.web.RequestHandler):
             self.write(row[0])
         else:
             raise tornado.web.HTTPError(404)
+
+class RedirectHandler(tornado.web.RequestHandler):
+    """Redirects to graph display given a full state description.
+    Useful for embedding graphs to show programatically supplied values.
+    """
+
+    def get(self, serialized):
+        fragment = shorten(serialized, self.application.settings['db_connection'])
+        url = self.application.settings['url_path_prefix']
+        if self.get_argument('embed', '') == 'true':
+            url += "?embed=true"
+        self.redirect(url + '#!' + fragment)
 
 
 def initialize_ui_server(config, secret_key=None, ioloop=None):
@@ -86,6 +107,7 @@ def initialize_ui_server(config, secret_key=None, ioloop=None):
         (r"/token", TokenHandler),
         (r"/shorten", ShortenHandler),
         (r"/expand/(.*)", ExpandHandler),
+        (r"/redirect/(.*)", RedirectHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": config['static_path']}),
     ], **config)
 
