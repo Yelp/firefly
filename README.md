@@ -19,7 +19,7 @@ The current release ships with a DataSource that reads RRD files - specifically,
 
 ## Prerequisites
 
-Firefly is written in Python and requires Python 2.6 or greater.
+Firefly is written in Python and requires Python 2.6 or greater. In addition you will need libcurl-dev, librrd-dev, and librtmp-dev after which you can simply run `pip install -e .`.
 
 ### YAML
 
@@ -33,7 +33,7 @@ For Ganglia support, the [rrdcached integration wiki page](http://sourceforge.ne
 
 ## Getting Started
 
-To get up and running immediately, make sure you update your submodules: `git submodule update --init`. Then simply run `python -m firefly.main --testing -c firefly.yaml.example` from your Firefly checkout.
+To get up and running immediately, make sure you update your submodules: `git submodule update --init`. Then simply run `python -m firefly.main --testing -c firefly.yaml.example` from your Firefly checkout.  The configuration option is now required due to the secret key being stored in it.
 
 For more help: `python -m firefly.main --help` or take a peek in `firefly.yaml.example`
 
@@ -89,7 +89,7 @@ If you want to run with any additional custom data sources, add them to the `dat
 
 ### Running Firefly
 
-`python -m firefly.main --testing`
+`python -m firefly.main -c <configuration file> --testing`
 
 This starts both a data server and a UI server in the same web server running on the local machine. The UI server is accessible on `localhost:8889` by default. Note that you do not need to have any data servers configured in the UI server for the UI server to know about the local data server running alongside it!
 

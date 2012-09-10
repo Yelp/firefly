@@ -182,5 +182,6 @@ firefly.SourceSelector.prototype._clearCurrentSrc = function() {
 
 firefly.SourceSelector.prototype._removeSourceSelector = function() {
 	this._clearCurrentSrc();
-	$(this.container).remove()
+	$(this.container).remove();
+	this.container = null;
 };
