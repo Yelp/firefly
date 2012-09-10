@@ -535,6 +535,10 @@ firefly.Renderer.prototype._redraw = function (data) {
 		this.hideGuide();
 	}
 	this.hasAnnotations = !!(data.annotations.length);
+
+	if (data.options.smooth) {
+		$(this.titleEl).addClass('smoothed');
+	}
 };
 
 
@@ -834,7 +838,7 @@ firefly.Renderer.prototype.title = function(sources) {
 		},
 		context: this,
 		success: function(data) {
-			$(this.titleEl).html( data['title'].join('&rarr;&#8203;') );
+			$(this.titleEl).html( data['title'].join('&rarr;&#8203;'));
 		}
 	});
 };

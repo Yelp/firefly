@@ -15,6 +15,7 @@ a:focus, button.pseudo-link:focus, button.pseudo-link::-moz-focus-inner {outline
 .graph .graph-content-container {overflow:hidden; position:relative;}
 #graphs .graph h2 {display:none;}
 .graph .graph-title {padding:5px;min-height:1em;}
+.graph .smoothed:after {content:' [smoothed]'; color: #ff3; opacity:0.5;}
 #graphs .graph .graph-title {z-index:0;position:absolute;background-color:rgba(32, 32, 32, 0.6);}
 .graph .actual-graph {line-height:0;}
 
