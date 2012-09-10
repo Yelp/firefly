@@ -10,6 +10,7 @@ class TestData(firefly.data_source.DataSource):
         if not path:
             return [{'type': 'file', 'name': 'test-data-plain'},
                     {'type': 'file', 'name': 'test-data-moving'},
+                    {'type': 'file', 'name': 'test-data-rough'},
                     {'type': 'file', 'name': 'test-data-discontinuous'}]
 
     def graph(self):
@@ -28,6 +29,8 @@ class TestData(firefly.data_source.DataSource):
                     val.append(math.sin(x*math.pi/(span/4)))
                 if source == 'test-data-moving':
                     val.append(math.sin(t*math.pi/(span/4)))
+                if source == 'test-data-rough':
+                    val.append(math.sin(0.5 + x*math.pi/(span/4)) + 0.15*math.sin(300*x*math.pi/span))
                 if source == 'test-data-discontinuous':
                     sine = math.sin(1+x*math.pi/(span/4))
                     if -0.3 < sine < 0.3:
@@ -41,14 +44,7 @@ class TestData(firefly.data_source.DataSource):
 
     def legend(self, sources):
         sources = self._flat_sources(sources)
-        titles = []
-        for source in sources:
-            if source == 'test-data-plain':
-                titles.append([["test-data-plain"], "#ff0000"])
-            if source == 'test-data-moving':
-                titles.append([["test-data-moving"], "#ff0000"])
-            if source == 'test-data-discontinuous':
-                titles.append([["test-data-discontinuous"], "#ff0000"])
+        titles = [[[source], "#ff0000"] for source in sources]
         return titles
 
     def _flat_sources(self, sources):
