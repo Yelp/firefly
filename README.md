@@ -19,7 +19,7 @@ The current release ships with a DataSource that reads RRD files - specifically,
 
 ## Prerequisites
 
-Firefly is written in Python and requires Python 2.6 or greater.
+Firefly is written in Python and requires Python 2.6 or greater. In addition you will need libcurl-dev, librrd-dev, and librtmp-dev after which you can simply run `pip install -e .`.
 
 ### YAML
 
