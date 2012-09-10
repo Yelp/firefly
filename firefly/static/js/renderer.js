@@ -276,6 +276,7 @@ firefly.Renderer.prototype.getDataCoords_ = function(layers, axes, timeAtMouseX)
 		}
 		else {
 			yVal = 'undef';
+			dotX = dotY = -20; // Move display off of the graph
 		}
 		dataPoints.push({
 			'dotX': dotX,
