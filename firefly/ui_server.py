@@ -109,7 +109,8 @@ class NameHandler(tornado.web.RequestHandler):
                 return
 
         conn.execute("insert or replace into names (name, stateid) values (?, ?)", (name, stateid))
-        self.write(name)
+        url = self.application.settings['url_path_prefix']
+        self.write('%snamed/%s' % (url, name))
         return
 
     def get(self, name):
@@ -118,7 +119,8 @@ class NameHandler(tornado.web.RequestHandler):
 
         if stateid:
             b58id = util.b58encode(stateid[0])
-            self.redirect('/?incoming=%s#!%s' % (name, b58id))
+            url = self.application.settings['url_path_prefix']
+            self.redirect('%s?incoming=%s#!%s' % (url, name, b58id))
         else:
             self.redirect('/')
 
