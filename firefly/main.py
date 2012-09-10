@@ -190,6 +190,10 @@ Runs in test mode:
 
     config["data_server"]["data_sources"] = data_sources
 
+    if "secret_key" not in config.keys():
+        log.error("No Secret Key Provided: Exiting")
+        sys.exit(1)
+
     if not options.omit_data_server:
         # Allow the data server to initialize itself and attach itself to the IOLoop
         initialize_data_server(config["data_server"], secret_key=config["secret_key"], ioloop=tornado.ioloop.IOLoop.instance())
