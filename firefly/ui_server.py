@@ -5,6 +5,8 @@ import os.path
 import sqlite3
 import sys
 import util
+import json
+import re
 
 import tornado.httpserver
 import tornado.ioloop
@@ -86,6 +88,41 @@ class RedirectHandler(tornado.web.RequestHandler):
             url += "?embed=true"
         self.redirect(url + '#!' + fragment)
 
+class NameHandler(tornado.web.RequestHandler):
+    """Handles storing and retrieving named dashboards"""
+
+    def put(self, name):
+        if not name:
+            self.set_status(500)
+            self.write('Name cannot be empty');
+            return
+        name = re.sub('\s', '-', name)
+        conn = self.application.settings['db_connection']
+        req = json.loads(self.request.body)
+        b58id = req['frag'].lstrip('#!')
+        stateid = util.b58decode(b58id)
+        if not req['confirmed']:
+            exists = conn.execute("select * from names where name = ?", (name,)).fetchone()
+            if exists:
+                self.set_status(409)
+                self.write('This name is already stored.  Are you sure you want to overwrite it?')
+                return
+
+        conn.execute("insert or replace into names (name, stateid) values (?, ?)", (name, stateid))
+        url = self.application.settings['url_path_prefix']
+        self.write('%snamed/%s' % (url, name))
+        return
+
+    def get(self, name):
+        conn = self.application.settings['db_connection']
+        stateid = conn.execute("select stateid from names where name = ?", (name,)).fetchone()
+
+        if stateid:
+            b58id = util.b58encode(stateid[0])
+            url = self.application.settings['url_path_prefix']
+            self.redirect('%s?incoming=%s#!%s' % (url, name, b58id))
+        else:
+            self.redirect('/')
 
 def initialize_ui_server(config, secret_key=None, ioloop=None):
     if not ioloop:
@@ -95,6 +132,8 @@ def initialize_ui_server(config, secret_key=None, ioloop=None):
     conn = sqlite3.connect(config['db_file'], isolation_level=None)
     conn.execute("create table if not exists states (id integer primary key autoincrement, state text not null, state_hash blob not null)")
     conn.execute("create index if not exists hash_idx on states(state_hash)")
+    conn.execute("create table if not exists names (id integer primary key autoincrement, name text not null, stateid integer not null)")
+    conn.execute("create unique index if not exists name_idx on names (name)")
 
     config["static_path"] = os.path.join(os.path.join(*os.path.split(__file__)[:-1]), 'static')
     config["db_connection"] = conn
@@ -108,6 +147,7 @@ def initialize_ui_server(config, secret_key=None, ioloop=None):
         (r"/shorten", ShortenHandler),
         (r"/expand/(.*)", ExpandHandler),
         (r"/redirect/(.*)", RedirectHandler),
+        (r"/named/(.*)", NameHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": config['static_path']}),
     ], **config)
 

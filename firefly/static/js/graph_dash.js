@@ -446,12 +446,8 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 						var loc = $(location).attr('href');
 						var nurl = $.param.querystring(loc, 'embed=true');
 						nurl = $.param.fragment(nurl, '!' + data,2);
-						$('<div></div>')
-						.html('<a href="'+nurl+'">'+nurl+'</a>')
-						.dialog({'title':'Embed url (paste in an iframe to embed)',
-							 'width':400,
-							 'height':50,
-							 'modal':true});
+						var link = 'Set link as iframe src to embed: <a href="'+nurl+'">'+nurl+'</a>'
+						new firefly.GraphModal({'title': 'Embed url', 'content': link});
 					}
 				});
 			}}
@@ -499,6 +495,59 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 			{'label': "4 Col", 'action': function() {instance.controller.setColumnCount(4);}},
 			{'label': "5 Col", 'action': function() {instance.controller.setColumnCount(5);}}
 		]},
+		{'label': "Save to Name", 'action': function() {
+			var footer = $('<div>');
+			var content = $('<div>');
+			var namebox = $('<input>');
+			namebox.attr('type', 'text');
+
+			var incoming = $.deparam.querystring().incoming;
+			if (incoming) {
+				content.append($('<p>').text('You came to this state from a saved graph.  The name is entered below.'));
+				namebox.val(incoming);
+			}
+			else {
+				content.append($('<p>').text('Enter a name to save this graph to.'));
+			}
+
+			content.append(namebox);
+			var flash = $('<div>');
+			content.append(flash);
+
+			var onsave = function() {
+				$.ajax({
+					url: instance.controller.makeURL_('named/' + namebox.val()),
+					type: 'put',
+					async: true,
+					contentType: 'application/json',
+					data: JSON.stringify({'frag': $(location).attr('hash'), 'confirmed': $('.graphmodal button.save').hasClass('confirm')}),
+					success: function(jqXHR) {
+						var namedurl = $(location).attr('protocol') + '//' + $(location).attr('host') + jqXHR;
+						flash.html('<p class="success">This dashboard is: </p>');
+						flash.append($('<a>').attr('href', namedurl).text(namedurl));
+						footer.empty().html('<button rel="modal-close" class="pseudo-link">Close</button>');
+					},
+					error: function(jqXHR) {
+						if (jqXHR.status == 409) {
+							flash.html('<p class="warning">This name is already in use.</p>');
+							$('.graphmodal button.save').text('Confirm Overwrite').addClass('confirm');
+
+						}
+						else {
+							flash.html('<p class="error">Save Failed: </p>');
+							flash.append(jqXHR.responseText);
+						}
+					}});
+			};
+
+			new firefly.GraphModal({'title': 'Save to Name',
+						'content': content,
+						'footer': footer,
+						'actions': [
+							{'name': 'Cancel', 'type': 'close'},
+							{'name': 'Save', 'action': onsave, 'type': 'save'}
+						]});
+		}},
 		{'label': "Make Zoom Global", 'action': function() {
 			var from = $(evt.target).retrieveGraph();
 			from && $('.graph').each( function() {
