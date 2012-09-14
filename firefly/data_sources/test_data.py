@@ -11,6 +11,9 @@ class TestData(firefly.data_source.DataSource):
             return [{'type': 'file', 'name': 'test-data-plain'},
                     {'type': 'file', 'name': 'test-data-moving'},
                     {'type': 'file', 'name': 'test-data-rough'},
+                    {'type': 'file', 'name': 'test-data-rough'},
+                    {'type': 'file', 'name': 'test-data-back'},
+                    {'type': 'file', 'name': 'test-data-and-forth'},
                     {'type': 'file', 'name': 'test-data-discontinuous'}]
 
     def graph(self):
@@ -31,6 +34,10 @@ class TestData(firefly.data_source.DataSource):
                     val.append(math.sin(t*math.pi/(span/4)))
                 if source == 'test-data-rough':
                     val.append(math.sin(0.5 + x*math.pi/(span/4)) + 0.15*math.sin(300*x*math.pi/span))
+                if source == 'test-data-back':
+                    val.append(0.53 if t%2 else None)
+                if source == 'test-data-and-forth':
+                    val.append(0.63 if t%2-1 else None)
                 if source == 'test-data-discontinuous':
                     sine = math.sin(1+x*math.pi/(span/4))
                     if -0.3 < sine < 0.3:
