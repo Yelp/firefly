@@ -44,8 +44,17 @@ a:focus, button.pseudo-link:focus, button.pseudo-link::-moz-focus-inner {outline
 .graphedit .graph h2 {display:block;font-size:1.0em;margin-bottom:5px;}
 .graphedit .graph .graph-title-container, .graphedit .graph .graph-region-container {margin-bottom:10px;}
 .graphedit .graph .graph-title {position:static;}
+.graphedit .control {margin-bottom: 3px;}
 .graphedit .controls label:hover {cursor:pointer;color:#0cf;}
 .graphedit .controls span {margin-left:4px;}
+.graphedit .control-group-header { background-color: rgba(0, 0, 0, 0.4); padding: 5px; border: 1px solid #222; border-radius: 3px; cursor: pointer;}
+.graphedit .control-group-header a {display:block;}
+.graphedit .control-group-header:hover { background-color: rgba(35, 35, 35, 0.8); border: 1px solid #333;}
+.graphedit .control-group-header span { background: url('../img/chosen-sprite.png') no-repeat -5px -5px;  width:10px; margin-right: 5px; float: left;}
+.graphedit .control-group-header span.collapsed {background: url('../img/chosen-sprite.png') no-repeat -23px -5px;}
+.graphedit .control-group { background-color: rgba(200, 200, 200, 0.2); margin-top: 0.3em; padding: 5px; border: 1px solid #222; border-radius: 3px;}
+.graphedit .control-group:first-child {margin-top: 0;}
+.graphedit .control-group-body { margin-top: 0.5em; text-indent: 5px;}
 
 .graphedit .source-selector {cursor:move;background-color:rgba(200,200,200,0.2);margin-bottom:5px;padding:5px;border:1px solid #222;border-radius:3px;}
 .graphedit .source-selector:last-of-type {margin-bottom:0;}
