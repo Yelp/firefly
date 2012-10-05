@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>firefly</title>
+		<link rel="stylesheet" type="text/css" href='{{ static_url("css/reset-min.css") }}'>
+		<style>
+			@font-face {
+				font-family: "Inconsolata";
+				src: url("{{ static_url("fonts/Inconsolata.ttf") }}");
+			}
+		</style>
+		<link href='{{ static_url("css/firefly.css") }}' rel='stylesheet' type='text/css'>
+		<link href='{{ static_url("css/list_dashboards.css") }}' rel='stylesheet' type='text/css'>
+		<link href='{{ static_url("css/chosen.css") }}' rel='stylesheet' type='text/css'>
+	</head>
+	<body>
+		<div class="graphs dashboard-list">
+			<div class="head">
+				<h1>Available Dashboards</h1>
+				<a href="{{url_path_prefix}}">Back to the graphs →</a>
+			</div>
+			<ul>
+			{% for name in names %}
+				<li>
+					<a href="{{url_path_prefix}}named/{{name}}">{{name}}</a>
+				</li>
+			{% end %}
+			</ul>
+		</div>
+	</body>
+</html>
