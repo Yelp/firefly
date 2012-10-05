@@ -288,6 +288,10 @@ firefly.GraphEdit.prototype.getControls = function(graphOptions) {
 		var headerAndBodyDiv = $('<div>').addClass('control-group');
 		headerAndBodyDiv.appendTo(frag);
 		var header = $('<h3>').addClass("control-group-header");
+		// \xa0 is a space (&nbsp;). You can't have jQuery insert "&nbsp;"
+		// because it will try to escape it, but we want to render blank
+		// space so the background image (the arrow) will show through.
+		// As a result, we're stuck inserting this funky dude
 		var headerIcon = $('<span>').text('\xa0');
 		header.append($('<a>').append(headerIcon).append(section.label));
 		header.appendTo(headerAndBodyDiv);
@@ -336,6 +340,8 @@ firefly.GraphEdit.prototype.getControls = function(graphOptions) {
 	});
 
 	$(frag).find(".control-group-header").click(function() {
+		// 375 is the number of milliseconds to spend sliding
+		// empirically determined for "feel"
 		$(this).next().slideToggle(375);
 		$(this).find("span").toggleClass("collapsed");
 		return false;
