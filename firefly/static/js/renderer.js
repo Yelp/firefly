@@ -79,7 +79,7 @@ firefly.Renderer.prototype._createSVG = function() {
 		//When this is the case, we draw a short "line" 0.2 px to the side of the original
 		//in order to form a point.  This allows for drawing something like a scatter plot.
 		if (points.length == 1) {
-			points.push([points[0][0] + 0.2, points[0][1]]);
+			points.push([points[0][0] + 0.7, points[0][1]]);
 		} 
 		return points.join("L");
 	}

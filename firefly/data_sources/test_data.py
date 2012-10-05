@@ -1,4 +1,5 @@
 import math
+import random
 
 import firefly.data_source
 
@@ -22,6 +23,7 @@ class TestData(firefly.data_source.DataSource):
         span = end - start
         data = []
         sources = self._flat_sources(sources)
+        random.seed(0)
         for x in xrange(span):
             t = x + start
             val = []
@@ -33,7 +35,7 @@ class TestData(firefly.data_source.DataSource):
                 if source == 'test-data-rough':
                     val.append(math.sin(0.5 + x*math.pi/(span/4)) + 0.15*math.sin(300*x*math.pi/span))
                 if source == 'test-data-scatter':
-                    val.append(0.53 if t%2 else None)
+                    val.append(random.random() - 0.5  if t%2 else None)
                 if source == 'test-data-discontinuous':
                     sine = math.sin(1+x*math.pi/(span/4))
                     if -0.3 < sine < 0.3:
