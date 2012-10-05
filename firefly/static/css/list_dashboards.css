@@ -1,0 +1,13 @@
+.dashboard-list .head h1 {
+	font-size: 2em;
+	display: inline;
+}
+
+.dashboard-list .head a {
+	float: right;
+	margin-top: 5px;
+}
+
+.dashboard-list ul li {
+	margin-bottom: 0.5em;
+}

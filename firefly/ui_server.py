@@ -124,6 +124,29 @@ class NameHandler(tornado.web.RequestHandler):
         else:
             self.redirect('/')
 
+
+class DashboardListHandler(tornado.web.RequestHandler):
+    """Displays a list of dashboards that have been saved using the
+    functionality in NameHandler.
+    """
+
+    def get(self):
+        conn = self.application.settings['db_connection']
+
+        names = conn.execute("SELECT name FROM names ORDER BY name ASC").fetchall()
+
+        # names comes back in the form of a list of tuples
+        # we only need a list of names, so let's flatten this
+        names = [name[0] for name in names]
+
+        env = {
+            'url_path_prefix': self.application.settings['url_path_prefix'],
+            'names': names
+        }
+
+        self.render("templates/list_dashboards.html", **env)
+
+
 def initialize_ui_server(config, secret_key=None, ioloop=None):
     if not ioloop:
         ioloop = tornado.ioloop.IOLoop.instance()
@@ -148,6 +171,7 @@ def initialize_ui_server(config, secret_key=None, ioloop=None):
         (r"/expand/(.*)", ExpandHandler),
         (r"/redirect/(.*)", RedirectHandler),
         (r"/named/(.*)", NameHandler),
+        (r"/dashboards", DashboardListHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": config['static_path']}),
     ], **config)
 
