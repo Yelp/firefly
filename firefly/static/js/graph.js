@@ -173,10 +173,19 @@ firefly.Graph.prototype.setHeight = function(height) {
 /** set up the cell when transitioning to empty state */
 firefly.Graph.prototype.setDOMAsEmpty = function() {
 	var frag = document.createDocumentFragment();
-	var a = document.createElement('a');
-	a.innerHTML = "add sources";
-	$(a).attr({'rel': 'action-edit-sources', 'href': '#'});
-	frag.appendChild(a);
+
+	var addSourcesLink = document.createElement('a');
+	$(addSourcesLink).text("add sources");
+	$(addSourcesLink).attr({'rel': 'action-edit-sources', 'href': '#'});
+	frag.appendChild(addSourcesLink);
+
+	frag.appendChild(document.createElement('hr'));
+
+	var listDashboardsLink = document.createElement('a');
+	$(listDashboardsLink).text("list dashboards");
+	$(listDashboardsLink).attr({'href': this.makeURL_("dashboards")});
+	frag.appendChild(listDashboardsLink);
+
 	this._legendEl = this._titleEl = this._graphEl = null;
 
 	$(this.container).empty();
