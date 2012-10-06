@@ -243,9 +243,6 @@ firefly.GraphEdit.prototype.valueParsers = {
 
 firefly.GraphEdit.prototype.controls = [
 	{'label': "Graph Options", 'groups': [
-		{'name': 'y_axis_log_scale', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
-			{'value': '1', 'label': 'Log-Scale Y Axis'}
-		]},
 		{'name': 'overlay_previous_period', 'inputType': 'radio', 'valueType': 'integer', 'items': [
 			{'value': undefined, 'label': 'Historical Overlay: None'},
 			{'value': 1, 'label': 'Historical Overlay: Previous Period'},
@@ -258,15 +255,24 @@ firefly.GraphEdit.prototype.controls = [
 		{'name': 'area_graph', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Area Graph'}
 		]},
+	]},
+	{'label': "Annotations Options", 'groups': [
 		{'name': 'show_annotations', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Show Annotations'},
 		]},
 		{'name': 'short_annotations', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Short Annotations'},
 		]},
+	]},
+	{'label': 'Axis Options', 'groups': [
+		{'name': 'y_axis_log_scale', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
+			{'value': '1', 'label': 'Log-Scale Y Axis'}
+		]},
 		{'name': 'y_axis_clamp', 'inputType': 'number', 'valueType': 'float', 'items': [
 			{'value': undefined, 'label': 'Y Axis Clamp'},
 		]},
+	]},
+	{'label': 'Smoothing Options', 'groups': [
 		{'name': 'smooth', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Smoothing'},
 		]},
@@ -279,9 +285,20 @@ firefly.GraphEdit.prototype.controls = [
 firefly.GraphEdit.prototype.getControls = function(graphOptions) {
 	var frag = $('<div>');
 	$.each(this.controls, function(i, section) {
-		$('<h3>').text(section.label).appendTo(frag);
+		var headerAndBodyDiv = $('<div>').addClass('control-group');
+		headerAndBodyDiv.appendTo(frag);
+		var header = $('<h3>').addClass("control-group-header");
+		// \xa0 is a space (&nbsp;). You can't have jQuery insert "&nbsp;"
+		// because it will try to escape it, but we want to render blank
+		// space so the background image (the arrow) will show through.
+		// As a result, we're stuck inserting this funky dude
+		var headerIcon = $('<span>').text('\xa0');
+		header.append($('<a>').append(headerIcon).append(section.label));
+		header.appendTo(headerAndBodyDiv);
+		var sectionDiv = $('<div>').addClass('control-group-body');
+		sectionDiv.appendTo(headerAndBodyDiv);
 		$.each(section.groups, function(j, group) {
-			var groupDiv = $('<div>').appendTo(frag);
+			var groupDiv = $('<div>').appendTo(sectionDiv);
 			$.each(group.items, function(k, item) {
 				var itemDiv = $('<div>').appendTo(groupDiv);
 				itemDiv.addClass('control');
@@ -320,6 +337,14 @@ firefly.GraphEdit.prototype.getControls = function(graphOptions) {
 				}
 			});
 		});
+	});
+
+	$(frag).find(".control-group-header").click(function() {
+		// 375 is the number of milliseconds to spend sliding
+		// empirically determined for "feel"
+		$(this).next().slideToggle(375);
+		$(this).find("span").toggleClass("collapsed");
+		return false;
 	});
 
 	return frag;
