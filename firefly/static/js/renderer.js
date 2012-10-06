@@ -73,9 +73,20 @@ firefly.Renderer.prototype._createSVG = function() {
 	// check for null data
 	checkDiscontinuous = function(d) {return d.y !== null;}
 
+	// custom interpolator for single points
+	interpol = function(points) { 
+		//This is a simple linear interpolator except when there are isolated points.
+		//When this is the case, we draw a short "line" 0.2 px to the side of the original
+		//in order to form a point.  This allows for drawing something like a scatter plot.
+		if (points.length == 1) {
+			points.push([points[0][0] + 0.7, points[0][1]]);
+		} 
+		return points.join("L");
+	}
+
 	// helpers for drawing our lines/areas
-	this.line = d3.svg.line().defined(checkDiscontinuous).interpolate("linear"); // use our custom interpolation for lines
-	this.previousLine = d3.svg.line().defined(checkDiscontinuous).interpolate("linear");
+	this.line = d3.svg.line().defined(checkDiscontinuous).interpolate(interpol); // use our custom interpolation for lines
+	this.previousLine = d3.svg.line().defined(checkDiscontinuous).interpolate(interpol);
 	this.area = d3.svg.area().interpolate("linear"); // and linear interpolation for areas
 
 	// interpolator to figure out an index-to-color mapping
