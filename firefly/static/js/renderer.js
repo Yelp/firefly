@@ -406,10 +406,6 @@ firefly.Renderer.prototype._redraw = function (data) {
 			.append("div")
 				.attr('class', 'annotation-tooltip')
 				.attr('data-id', function(d){ return d.id; })
-			.append("table")
-			.append("tbody")
-			.append("td")
-				.attr('class', 'annotation-tooltip-value')
 				.attr('title', function(d){ return d.description; });
 		annotation_tooltips.exit().remove();
 	}
@@ -626,14 +622,12 @@ firefly.Renderer.prototype.drawAnnotations = function(div, data){
 		.attr("x1", function(d){ return renderer.xScale(d.time); })
 		.attr("x2", function(d){ return renderer.xScale(d.time); });
 
-	div.selectAll(".annotation-tooltip-value")
+	div.selectAll(".annotation-tooltip")
 		.text(function(d){
 			var label = d.type;
 			if (data.options.short_annotations) label = label.substring(0,1);
 			return label;
 		})
-
-	div.selectAll(".annotation-tooltip")
 		.style('top', function(d) { return (renderer._pickAnnotationToolTipLocation(d, this, data)[1]) + 'px'; })
 		.style('left', function(d) { return (renderer._pickAnnotationToolTipLocation(d, this, data)[0]) + 'px'; });
 };
