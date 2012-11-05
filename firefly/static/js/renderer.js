@@ -221,7 +221,15 @@ firefly.Renderer.prototype.positionGuide = function() {
 	// tooltip: position it by the mouse
 	d3.select(this.tooltip_)
 		.style('top', mouseCoords[1] + 'px')
-		.style('left', mouseCoords[0] + 20 + 'px');
+		.style('left', function() {
+			var thisw = $(this).width();
+			if (mouseCoords[0] + thisw > renderer.width) {
+				return mouseCoords[0] - thisw - 20 + 'px';
+			}
+			else {
+				return mouseCoords[0] + 20 + 'px';
+			}
+		});
 };
 
 
