@@ -224,10 +224,12 @@ firefly.Renderer.prototype.positionGuide = function() {
 		.style('left', function() {
 			var thisw = $(this).width();
 			if (mouseCoords[0] + thisw > renderer.width) {
-				return mouseCoords[0] - thisw - 20 + 'px';
+				// Move the tooltip to the left of the cursor with a 20px buffer
+				return (mouseCoords[0] - thisw - 20) + 'px';
 			}
 			else {
-				return mouseCoords[0] + 20 + 'px';
+				// Leave the tooltip on the right of the cursor with a 20px buffer
+				return (mouseCoords[0] + 20) + 'px';
 			}
 		});
 };
