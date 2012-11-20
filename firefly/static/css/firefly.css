@@ -20,6 +20,12 @@ a:focus, button.pseudo-link:focus, button.pseudo-link::-moz-focus-inner {outline
 .graph .smoothed:after {content:' [smoothed]'; color: #ff3; opacity:0.5;}
 #graphs .graph .graph-title {z-index:0;position:absolute;background-color:rgba(32, 32, 32, 0.6);}
 .graph .actual-graph {line-height:0;}
+iframe.graph {width: 100%; height: 100%; border: none; -moz-box-sizing: border-box; -webkit-box-size: border-box; padding: 0; margin: 0; overflow: hidden; }
+
+.iframe-cell {position: relative; border: none; padding: none; width: 100%; height: 100%; overflow: hidden; }
+.iframe-cell > span {position: absolute; top: 0px; left: 0px; right: 0px; height: 16px;}
+.iframe-cell > div  {position: absolute; top: 16px; left: 0px; right: 0px; bottom: 0px;}
+
 
 .legend {font-size:0.8em;padding:10px;}
 .legend td {vertical-align:top;}
