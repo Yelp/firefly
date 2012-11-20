@@ -117,6 +117,13 @@ firefly.Graph.prototype.sourcesChanged = function(oldSources) {
 	// NB: jQuery stupidly flattens the returned array, hence the extra wrapper
 	this._sourcesNormalized = $.map(this._sources, function(src, idx) {return [src.slice(1)];});
 
+	if (this._sources.length === 1 && this._sources[0][0] == "iframe") {
+		cell = $(this.container);
+		var target = this._sources[0][1];
+		cell.html('<div class="iframe-cell"><span>'+target+'</span><div><iframe frameborder="0" class="graph" src="'+target+'">Broken iframe</iframe></div></div>');
+		return;
+	}
+
 	// if we delayed rendering of the graph (due to loading a saved set in the dash),
 	// we'll still want to do the appropriate drawing
 	if (this._sources.length && (!oldSources.length || !this._domInited)) {

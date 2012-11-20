@@ -455,6 +455,19 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 		]);
 
 		menuItems.push.apply(menuItems, [
+			{"label": "External", 'header': true},
+			{"label": "Insert Page", 'action': function() {
+				var graph = $(evt.target).retrieveGraph();
+				var target = prompt("Target:");
+				var obj = {};
+				obj.sources = [["iframe", target, ""]];
+				obj.zoom = "100";
+				graph.sync(obj);
+				$(instance.container).trigger('ff:dashchange');
+			}},
+		]);
+
+		menuItems.push.apply(menuItems, [
 			{'label': "Row", 'header': true},
 			{'label': "Add Row Above", 'action': function() {
 				var relativeTR = $(evt.target).closest('tr').prev('tr').get(0);
