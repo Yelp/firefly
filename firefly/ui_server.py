@@ -162,6 +162,7 @@ def initialize_ui_server(config, secret_key=None, ioloop=None):
     config["db_connection"] = conn
     config["static_url_prefix"] = os.path.join(config["url_path_prefix"], "static") + "/"
     config["secret_key"] = secret_key
+    config['autoescape'] = None
 
     # init the application instance
     application = tornado.web.Application([
