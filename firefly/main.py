@@ -33,7 +33,11 @@ log = logging.getLogger('firefly')
 
 def load_config_from_file(config_file):
     with open(config_file, 'r') as f:
-        config = yaml.load(f)
+        try:
+            config = yaml.safe_load(f)
+        except yaml.scanner.ScannerError:
+            log.error('Invalid yaml in config file %s' % config_file)
+            sys.exit(1)
     return config
 
 if __name__ == "__main__":
