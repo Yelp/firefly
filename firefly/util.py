@@ -63,6 +63,9 @@ def generate_access_token(key, duration=60):
     signature = hmac.new(key, msg=t, digestmod=hashlib.sha1).hexdigest()
     return t + signature
 
+def generate_ds_key(ds):
+    return hashlib.sha1(ds).hexdigest()[:6]
+
 # Base58 is the encoding used by bit.ly, flickr, etc. to identify short URLs
 # It's Base62 [a-zA-Z0-9] minus chars that can be confused when transcribed by hand
 b58chars = "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
