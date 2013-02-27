@@ -1,8 +1,12 @@
-import colorsys
-from itertools import izip
-import json
 import os
 import os.path
+import colorsys
+from itertools import izip
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 import whisper
 
