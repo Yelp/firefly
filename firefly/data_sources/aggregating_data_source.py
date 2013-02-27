@@ -9,9 +9,9 @@ other data servers to collect data.
 from collections import defaultdict
 import json
 from urllib import urlencode
+from urllib2 import urlopen
+from urllib2 import URLError
 import urlparse
-
-from tornado import httpclient
 
 from firefly import util
 import firefly.data_source
@@ -116,8 +116,9 @@ class AggregatingDataSource(firefly.data_source.DataSource):
         if path:
             request_path.extend(path)
 
-        base_url = urlparse.urljoin(data_source['data_server_url'],
-            '/sources')
+        print request_path
+
+        base_url = '/'.join((data_source['data_server_url'].rstrip('/'), 'sources'))
 
         request_params = urlencode({
             'path': json.dumps(request_path),
@@ -127,22 +128,22 @@ class AggregatingDataSource(firefly.data_source.DataSource):
         request_path = '?'.join((base_url,
             request_params))
 
-        http_client = httpclient.HTTPClient()
+        import ipdb; ipdb.set_trace()
         try:
-            response = http_client.fetch(request_path)
-        except httpclient.HTTPError:
+            print request_path
+            response = urlopen(request_path)
+            return json.loads(response.read())
+        except URLError:
             self.logger.exception("Failed to fetch paths for %s from %s" % (
                 path, data_source['data_server_url']))
             return []
-        try:
-            return json.loads(response.body)
-        except:
+        except ValueError:
             self.logger.exception("Invalid response received from %s" % data_source['data_server_url'])
             return []
 
     def _request_data_from_ds(self, data_source, sources, start, end, width):
         token = util.generate_access_token(data_source['secret_key'])
-        base_url = urlparse.urljoin(data_source['data_server_url'], '/data')
+        base_url = '/'.join((data_source['data_server_url'].rstrip('/'), 'data'))
 
         ds_hash = data_source['data_source_hash']
         request_sources = [[ds_hash] + source for source in sources]
@@ -158,14 +159,13 @@ class AggregatingDataSource(firefly.data_source.DataSource):
 
         url = '?'.join((base_url, encoded_data_params))
 
-        http_client = httpclient.HTTPClient()
         try:
-            response = http_client.fetch(url)
-        except httpclient.HTTPError:
+            response = urlopen(url)
+        except URLError:
             self.logger.exception("Failed to fetch data for %s from %s" % (
                 source, data_source['data_server_url']))
 
-        return json.loads(response.body)
+        return json.loads(response.read())
 
     def _data_source_for_stat_key(self, stat_key):
         if stat_key in self.key_mapping_cache:
