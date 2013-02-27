@@ -8,6 +8,8 @@ class DataSource(object):
 
     DESC = "Base class for Firefly Data Sources"
 
+    path_splitter = "."
+
     def __init__(self, *args, **kwargs):
         self.logger = logging.getLogger(__name__)
 
@@ -30,19 +32,44 @@ class DataSource(object):
         if len(sources) == 1:
             return self._svc([[sources[0][-1]]])
         else:
-            _sources = ['/'.join([s.split('.')[1] if '.' in s else s for s in src[:-1]]) for src in sources]
-            common_root = os.path.commonprefix(_sources)
-            out = []
-            for idx, src in enumerate(_sources):
-                # just....don't ask
-                out.append([foo for foo in _sources[idx][len(common_root):].split('/') + [sources[idx][-1]] if foo])
-            return self._svc(out)
+            return self._svc(unique_suffixes(sources, splitter=self.path_splitter))
 
     def title(self, sources):
         if len(sources) == 1:
-            return [src.split('.')[1] for src in sources[0][:-1]]
+            return map(lambda src: _maybe_right_split(src, self.path_splitter), sources[0][:-1])
         else:
-            _sources = ['/'.join([s.split('.')[1] if '.' in s else s for s in src[:-1]]) for src in sources]
-            common_root = os.path.commonprefix(_sources)
-            return common_root.split('/')
+            thing = common_source_prefix(sources, splitter=self.path_splitter)
+            return thing
 
+
+def common_source_prefix(sources, splitter="."):
+    common_prefix = []
+
+    for source_step in zip(*sources):
+        # For each component in each source at the same position,
+        # make sure the components are the same.
+        # If they are, add it to the common prefix.
+        # If not, we're done.
+        source_step = map(lambda x: _maybe_right_split(x, splitter), source_step)
+        if len(set(source_step)) == 1:
+            common_prefix.append(source_step[0])
+        else:
+            break
+
+    return common_prefix
+
+
+def _maybe_right_split(s, splitter):
+    if splitter and splitter in s:
+        return s.split(splitter)[1]
+    else:
+        return s
+
+
+def unique_suffixes(sources, splitter="."):
+    common_prefix = common_source_prefix(sources, splitter="")
+    prefix_len = len(common_prefix)
+
+    suffixes = [source[prefix_len:] for source in sources]
+    return [map(lambda x: _maybe_right_split(x, splitter), suffix)
+        for suffix in suffixes]
