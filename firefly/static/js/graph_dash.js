@@ -333,7 +333,9 @@ firefly.Dashboard.prototype.setColumnCount = function(columnCount) {
 firefly.DashboardView = function(controller, container) {
 	this.logger_ = goog.debug.Logger.getLogger('firefly.DashboardView');
 
-	this.clipboard_ = null; // a nice little clipboard for duplicating graphs
+	// clipboards for copying entire graphs or just their options
+	this.clipboard_graph_ = null;
+	this.clipboard_options_ = null;
 	this.controller = controller;
 	this.container = container;
 	if (!this.controller.embedded_){
@@ -416,17 +418,25 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 				{'label': "1 year", 'action': function() {setZoom($(evt.target).retrieveGraph(), "31536000");}},
 				{'label': "custom", 'action': function() {setZoom($(evt.target).retrieveGraph(), prompt("Zoom in seconds"));}},
 			]},
+			{'label': "Make Zoom Global", 'action': function() {
+				var from = $(evt.target).retrieveGraph();
+				from && $('.graph').each( function() {
+					to = $(this).retrieveGraph();
+					to && to.setZoom(from.zoom);
+				});
+				$(instance.container).trigger('ff:dashchange');
+			}},
 			{"label": "Cut Graph", "action": function() {
 				var graph = $(evt.target).retrieveGraph();
-				instance.clipboard_ = graph.serialize();
+				instance.clipboard_graph_ = graph.serialize();
 				graph.clear();
 				$(instance.container).trigger('ff:dashchange');
 			}},
 			{"label": "Copy Graph", "action": function() {
-				instance.clipboard_ = $(evt.target).retrieveGraph().serialize();
+				instance.clipboard_graph_ = $(evt.target).retrieveGraph().serialize();
 			}},
-			{"label": "Paste Graph", "disabled": (instance.clipboard_ ? false : true), "action": function() {
-				$(evt.target).retrieveGraph().sync(instance.clipboard_);
+			{"label": "Paste Graph", "disabled": (instance.clipboard_graph_ ? false : true), "action": function() {
+				$(evt.target).retrieveGraph().sync(instance.clipboard_graph_);
 				$(instance.container).trigger('ff:dashchange');
 			}},
 			{"label": "Isolate Graph", "action": function() {
@@ -450,8 +460,14 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 						new firefly.GraphModal({'title': 'Embed url', 'content': link});
 					}
 				});
+			}},
+			{"label": "Copy Graph Options", "action": function() {
+				instance.clipboard_options_ = $(evt.target).retrieveGraph().serialize().options;
+			}},
+			{"label": "Paste Graph Options", "disabled": (instance.clipboard_options_ ? false : true), "action": function() {
+				$(evt.target).retrieveGraph().syncOptions(instance.clipboard_options_);
+				$(instance.container).trigger('ff:dashchange');
 			}}
-
 		]);
 
 		menuItems.push.apply(menuItems, [
@@ -547,14 +563,6 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 							{'name': 'Cancel', 'type': 'close'},
 							{'name': 'Save', 'action': onsave, 'type': 'save'}
 						]});
-		}},
-		{'label': "Make Zoom Global", 'action': function() {
-			var from = $(evt.target).retrieveGraph();
-			from && $('.graph').each( function() {
-				to = $(this).retrieveGraph();
-				to && to.setZoom(from.zoom);
-			});
-			$(instance.container).trigger('ff:dashchange');
 		}}
 	]);
 	return menuItems;
