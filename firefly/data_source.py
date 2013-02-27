@@ -1,6 +1,5 @@
 import colorsys
 import logging
-import os.path
 
 
 class DataSource(object):

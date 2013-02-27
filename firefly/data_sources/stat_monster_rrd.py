@@ -13,6 +13,8 @@ class StatMonsterRRD(ganglia_rrd.GangliaRRD):
 
     DESC = "StatMonster"
 
+    path_splitter = "."
+
     def __init__(self, *args, **kwargs):
         super(StatMonsterRRD, self).__init__(*args, **kwargs)
         self.GRAPH_ROOT = kwargs['rrdcached_storage']

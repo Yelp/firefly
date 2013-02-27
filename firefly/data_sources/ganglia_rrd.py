@@ -1,4 +1,3 @@
-import colorsys
 import math
 import os
 import os.path
@@ -8,10 +7,13 @@ import xml.etree.cElementTree as ET
 
 import firefly.data_source
 
+
 class GangliaRRD(firefly.data_source.DataSource):
     """Stats from Ganglia"""
 
     DESC = "Ganglia Stats"
+
+    path_splitter = ""
 
     def __init__(self, *args, **kwargs):
         super(GangliaRRD, self).__init__(*args, **kwargs)
@@ -52,7 +54,7 @@ class GangliaRRD(firefly.data_source.DataSource):
 
         conditionals = [
             # flush rrdcached before making graph
-            (self.DAEMON_ADDR , ['--daemon', self.DAEMON_ADDR])]
+            (self.DAEMON_ADDR, ['--daemon', self.DAEMON_ADDR])]
 
         for condition, optlist in conditionals:
             if condition:
