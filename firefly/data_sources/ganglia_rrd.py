@@ -1,4 +1,3 @@
-import colorsys
 import math
 import os
 import os.path
@@ -8,10 +7,13 @@ import xml.etree.cElementTree as ET
 
 import firefly.data_source
 
+
 class GangliaRRD(firefly.data_source.DataSource):
     """Stats from Ganglia"""
 
     DESC = "Ganglia Stats"
+
+    path_splitter = ""
 
     def __init__(self, *args, **kwargs):
         super(GangliaRRD, self).__init__(*args, **kwargs)
@@ -39,11 +41,6 @@ class GangliaRRD(firefly.data_source.DataSource):
     def _form_entries_from_file(self, root, name):
         return [{'type': 'file', 'name': name[:-4]}]
 
-    def _svc(self, sources):
-        colorstep = 1.0 / len(sources)
-        svc = zip(sources, ("#%s" % ("%02x%02x%02x" % colorsys.hsv_to_rgb(i*colorstep, 1, 255)) for i in xrange(len(sources))))
-        return svc
-
     def _form_def(self, idx, source):
         source = "%s.rrd" % '/'.join(source)
         return "DEF:ds%d=%s/%s:sum:AVERAGE" % (idx, self.GRAPH_ROOT, os.path.join(*source.split('/')))
@@ -57,7 +54,7 @@ class GangliaRRD(firefly.data_source.DataSource):
 
         conditionals = [
             # flush rrdcached before making graph
-            (self.DAEMON_ADDR , ['--daemon', self.DAEMON_ADDR])]
+            (self.DAEMON_ADDR, ['--daemon', self.DAEMON_ADDR])]
 
         for condition, optlist in conditionals:
             if condition:
@@ -88,9 +85,3 @@ class GangliaRRD(firefly.data_source.DataSource):
             raise tornado.web.HTTPError(500, log_message=str(e))
 
         return "[%s]" % ",".join(data)
-
-    def legend(self, sources):
-        return self._svc(sources)
-
-    def title(self, sources):
-        return ["ganglia"]
