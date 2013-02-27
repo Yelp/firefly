@@ -11,7 +11,6 @@ import json
 from urllib import urlencode
 from urllib2 import urlopen
 from urllib2 import URLError
-import urlparse
 
 from firefly import util
 import firefly.data_source
@@ -71,6 +70,7 @@ class AggregatingDataSource(firefly.data_source.DataSource):
             stat_key = path[0]
             data_source = self._data_source_for_stat_key(stat_key)
             paths = self._request_paths_from_ds(data_source, path)
+            contents.extend(paths)
 
         return contents
 
@@ -116,8 +116,6 @@ class AggregatingDataSource(firefly.data_source.DataSource):
         if path:
             request_path.extend(path)
 
-        print request_path
-
         base_url = '/'.join((data_source['data_server_url'].rstrip('/'), 'sources'))
 
         request_params = urlencode({
@@ -128,9 +126,7 @@ class AggregatingDataSource(firefly.data_source.DataSource):
         request_path = '?'.join((base_url,
             request_params))
 
-        import ipdb; ipdb.set_trace()
         try:
-            print request_path
             response = urlopen(request_path)
             return json.loads(response.read())
         except URLError:
