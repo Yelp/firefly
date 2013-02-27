@@ -39,11 +39,6 @@ class GangliaRRD(firefly.data_source.DataSource):
     def _form_entries_from_file(self, root, name):
         return [{'type': 'file', 'name': name[:-4]}]
 
-    def _svc(self, sources):
-        colorstep = 1.0 / len(sources)
-        svc = zip(sources, ("#%s" % ("%02x%02x%02x" % colorsys.hsv_to_rgb(i*colorstep, 1, 255)) for i in xrange(len(sources))))
-        return svc
-
     def _form_def(self, idx, source):
         source = "%s.rrd" % '/'.join(source)
         return "DEF:ds%d=%s/%s:sum:AVERAGE" % (idx, self.GRAPH_ROOT, os.path.join(*source.split('/')))
@@ -88,9 +83,3 @@ class GangliaRRD(firefly.data_source.DataSource):
             raise tornado.web.HTTPError(500, log_message=str(e))
 
         return "[%s]" % ",".join(data)
-
-    def legend(self, sources):
-        return self._svc(sources)
-
-    def title(self, sources):
-        return ["ganglia"]
