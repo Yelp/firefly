@@ -5,7 +5,6 @@ from setuptools import setup
 requirements = [
     "pycurl",
     "pyyaml >= 3.09",
-    "simplejson",
     "tornado >= 1.1, <2.0",
 ]
 

@@ -1,16 +1,22 @@
 from __future__ import with_statement
+
+import re
+import sys
 import hashlib
 import logging
 import os.path
 import sqlite3
-import sys
-import util
-import json
-import re
 
-import tornado.httpserver
-import tornado.ioloop
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
 import tornado.web
+import tornado.ioloop
+import tornado.httpserver
+
+import util
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log = logging.getLogger('firefly_ui_server')

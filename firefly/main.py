@@ -33,7 +33,11 @@ log = logging.getLogger('firefly')
 
 def load_config_from_file(config_file):
     with open(config_file, 'r') as f:
-        config = yaml.load(f)
+        try:
+            config = yaml.safe_load(f)
+        except yaml.scanner.ScannerError:
+            log.error('Invalid yaml in config file %s' % config_file)
+            sys.exit(1)
     return config
 
 if __name__ == "__main__":
@@ -196,11 +200,23 @@ Runs in test mode:
 
     if not options.omit_data_server:
         # Allow the data server to initialize itself and attach itself to the IOLoop
-        initialize_data_server(config["data_server"], secret_key=config["secret_key"], ioloop=tornado.ioloop.IOLoop.instance())
+        try:
+            initialize_data_server(config["data_server"], secret_key=config["secret_key"], ioloop=tornado.ioloop.IOLoop.instance())
+        except socket.error as exc:
+            log.error('Problem starting data server: %s' % str(exc))
+            sys.exit(1)
 
     if not options.omit_ui_server:
         # Allow the UI server to initialize itself and attach itself to the IOLoop
-        initialize_ui_server(config["ui_server"], secret_key=config["secret_key"], ioloop=tornado.ioloop.IOLoop.instance())
+        try:
+            initialize_ui_server(config["ui_server"], secret_key=config["secret_key"], ioloop=tornado.ioloop.IOLoop.instance())
+        except socket.error as exc:
+            log.error('Problem starting ui server: %s' % str(exc))
+            sys.exit(1)
 
-    # Kick everything off
-    tornado.ioloop.IOLoop.instance().start()
+    try:
+        # Kick everything off
+        tornado.ioloop.IOLoop.instance().start()
+    except KeyboardInterrupt:
+        sys.stderr.write('\nExiting on CTRL-c\n')
+        sys.exit(0)
