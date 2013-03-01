@@ -46,10 +46,6 @@ class AggregatingDataSource(firefly.data_source.DataSource):
 
     DESC = "Aggregates other data sources"
 
-    # Keeps track of the first entry in a key, mapping it to a specific data
-    # source. The first instance of a key is always authoritative.
-    key_mapping_cache = {}
-
     def __init__(self, *args, **kwargs):
         """Reads the configuration passed to it and holds on to the data
         sources that are available to this data source.
@@ -59,6 +55,10 @@ class AggregatingDataSource(firefly.data_source.DataSource):
         self.data_sources = []
 
         self.DESC = kwargs.get('desc', self.DESC)
+
+        # Keeps track of the first entry in a key, mapping it to a specific data
+        # source. The first instance of a key is always authoritative.
+        self.key_mapping_cache = {}
 
         data_sources = kwargs['data_sources']
         for data_source in data_sources:
