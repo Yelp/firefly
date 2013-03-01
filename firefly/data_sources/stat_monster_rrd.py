@@ -13,6 +13,8 @@ class StatMonsterRRD(ganglia_rrd.GangliaRRD):
 
     DESC = "StatMonster"
 
+    path_splitter = "."
+
     def __init__(self, *args, **kwargs):
         super(StatMonsterRRD, self).__init__(*args, **kwargs)
         self.GRAPH_ROOT = kwargs['rrdcached_storage']
@@ -39,23 +41,3 @@ class StatMonsterRRD(ganglia_rrd.GangliaRRD):
         fn = "%s/%s/%s.rrd" % (self.GRAPH_ROOT, '/'.join(src_root), src_file_basename)
 
         return "DEF:ds%d=%s:%s:AVERAGE" % (idx, fn, ds_name)
-
-    def legend(self, sources):
-        if len(sources) == 1:
-            return self._svc([[sources[0][-1]]])
-        else:
-            _sources = ['/'.join([s.split('.')[1] if '.' in s else s for s in src[:-1]]) for src in sources]
-            common_root = os.path.commonprefix(_sources)
-            out = []
-            for idx,src in enumerate(_sources):
-                # just....don't ask
-                out.append([foo for foo in _sources[idx][len(common_root):].split('/') + [sources[idx][-1]] if foo])
-            return self._svc(out)
-
-    def title(self, sources):
-        if len(sources) == 1:
-            return [src.split('.')[1] for src in sources[0][:-1]]
-        else:
-            _sources = ['/'.join([s.split('.')[1] if '.' in s else s for s in src[:-1]]) for src in sources]
-            common_root = os.path.commonprefix(_sources)
-            return common_root.split('/')

@@ -64,6 +64,12 @@ firefly.Graph.prototype.sync = function(serialized) {
 	}
 };
 
+/** sync this graph's options to the serialized representation passed in */
+firefly.Graph.prototype.syncOptions = function(serialized) {
+	this._options = serialized;
+	this.updateGraph();
+};
+
 
 firefly.Graph.prototype.clear = function() {
 	this.sync({});
