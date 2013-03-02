@@ -7,4 +7,4 @@ docs:
 tests: test
 
 test:
-	testify --summary -x disabled tests
+	testify --summary --exclude-suite disabled tests
