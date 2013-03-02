@@ -14,7 +14,6 @@ Configuration precedence works as follows:
 """
 
 from collections import defaultdict
-import hashlib
 import logging
 from optparse import OptionGroup, OptionParser
 import os
@@ -30,6 +29,7 @@ from firefly.ui_server import initialize_ui_server
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log = logging.getLogger('firefly')
+
 
 def load_config_from_file(config_file):
     with open(config_file, 'r') as f:
@@ -181,8 +181,8 @@ Runs in test mode:
     def get_ds_instance(ds):
         ds_class = util.import_module_class(ds)
         ds_kwargs = config['data_server']['data_source_config'].get(ds, {})
-        ds_instance = ds_class(**ds_kwargs) # args only used by StatMonsterRRD atm
-        key = hashlib.sha1(ds).hexdigest()[:6]
+        ds_instance = ds_class(**ds_kwargs)  # args only used by StatMonsterRRD atm
+        key = util.generate_ds_key(ds)
         ds_instance._FF_KEY = key
         config['data_server']['data_sources_by_key'][key] = ds_instance
         return ds_instance
