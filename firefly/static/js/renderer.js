@@ -2,6 +2,7 @@ goog.provide("firefly.Renderer");
 
 goog.require('goog.debug.Logger');
 
+var RIGHT_ARROW = '&rarr;&#8203;';
 
 /**
  * @constructor
@@ -14,9 +15,6 @@ firefly.Renderer = function(graph, makeURL, container, titleEl, legendEl, contai
 	this.legendEl = legendEl;
 	this.titleEl = titleEl;
 	this.containerHeight_ = containerHeight;
-
-	// TODO (fhats) kill me
-	this.dataServer = this.sources[0][0];
 
 	// create the tooltip element, which we'll use on mouseover
 	// to show data point details
@@ -817,10 +815,31 @@ firefly.Renderer.prototype._linearTickFormat = function(domain, count) {
 	}
 };
 
-firefly.Renderer.prototype.legend = function(sources) {
-	this.legendXHR && this.legendXHR.abort();
-	this.legendXHR = $.ajax({
-		url: this.dataServer + '/legend',
+firefly.Renderer.prototype._buildDataServerToSourcesMap = function(sources) {
+	var dataServerToSources = {};
+
+	$.each(sources, function(source_idx, source) {
+		dataServerToSources[source[0]] = dataServerToSources[source[0]] || [];
+		dataServerToSources[source[0]].push(source.slice(1));
+	});
+
+	return dataServerToSources;
+};
+
+firefly.Renderer.prototype._buildDataServerToSourcePositionMap = function(sources) {
+	var result = {};
+
+	$.each(sources, function(source_idx, source) {
+		result[source[0]] = result[source[0]] || [];
+		result[source[0]].push(source_idx);
+	});
+
+	return result;
+};
+
+firefly.Renderer.prototype.sendLegendXHR = function(dataServer, sources, positions, totalSourceCount) {
+	return $.ajax({
+		url: dataServer + '/legend',
 		dataType: 'json',
 		data: {
 			'sources': JSON.stringify(sources),
@@ -829,14 +848,21 @@ firefly.Renderer.prototype.legend = function(sources) {
 		context: this,
 		success: function(data) {
 			var that = this;
+
+			this.collectedLegends[dataServer] = data['legend'];
+			$.each(data['legend'], function(legend_idx, legend) {
+				that.orderedLegends[positions[legend_idx]] = legend;
+			});
+			if (Object.keys(this.legendXHRs).length !== Object.keys(this.collectedLegends).length) return;
+
 			var ul = $("<ul>");
 
-			$.each(data['legend'], function(i, source) {
+			$.each(this.orderedLegends, function(i, source) {
 				var li = $("<li>").appendTo(ul);
 				var div = $("<div>").addClass("color").appendTo(li);
 
-				$(div).css("background-color", that.hsl(i / sources.length));
-				$("<span>").html( source[0].join('&rarr;&#8203;') ).appendTo(li);
+				$(div).css("background-color", that.hsl(i / totalSourceCount));
+				$("<span>").html( source[0].join(RIGHT_ARROW) ).appendTo(li);
 			});
 
 			$(this.legendEl).empty().append(ul);
@@ -845,10 +871,48 @@ firefly.Renderer.prototype.legend = function(sources) {
 	});
 };
 
-firefly.Renderer.prototype.title = function(sources) {
-	this.titleXHR && this.titleXHR.abort();
-	this.titleXHR = $.ajax({
-		url: this.dataServer + '/title',
+firefly.Renderer.prototype.legend = function(sources) {
+	if (this.legendXHRs) {
+		$.each(this.legendXHRs, function(idx, xhr) {
+			xhr.abort();
+		});
+	}
+	this.legendXHRs = {};
+	this.collectedLegends = {};
+	this.orderedLegends = [];
+	for (var i = 0; i < sources.length; i++){
+		this.orderedLegends.push(null);
+	}
+
+	var dataServerToSources = this._buildDataServerToSourcesMap(sources);
+	var dataServerToPositions = this._buildDataServerToSourcePositionMap(sources);
+	var dataServer;
+
+	for (dataServer in dataServerToSources) {
+		var requestSources = dataServerToSources[dataServer];
+		var requestPositions = dataServerToPositions[dataServer];
+		this.legendXHRs[dataServer] = this.sendLegendXHR(dataServer, requestSources, requestPositions, sources.length);
+	}
+};
+
+firefly.Renderer.prototype.arrayLongestCommonPrefix = function(array1, array2) {
+	var i;
+	var result = [];
+	for (i = 0; i < array1.length; i++) {
+		var side1 = array1[i];
+		var side2 = array2[i];
+		if (side1 && side2 && side1 === side2) {
+			result.push(side1);
+		} else {
+			break;
+		}
+	}
+	return result;
+};
+
+firefly.Renderer.prototype.sendTitleXHR = function(dataServer, sources) {
+	return $.ajax({
+		url: dataServer + '/title',
 		dataType: 'json',
 		data: {
 			'sources': JSON.stringify(sources),
@@ -856,7 +920,31 @@ firefly.Renderer.prototype.title = function(sources) {
 		},
 		context: this,
 		success: function(data) {
-			$(this.titleEl).html( data['title'].join('&rarr;&#8203;'));
+			this.collectedTitles[dataServer] = data['title'];
+			if (Object.keys(this.titleXHRs).length !== Object.keys(this.collectedTitles).length) return;
+
+			var newTitle = $.map(this.collectedTitles, function(title, ds) { return [title]; });
+			newTitle = newTitle.reduce(this.arrayLongestCommonPrefix);
+
+			$(this.titleEl).html( newTitle.join(RIGHT_ARROW));
 		}
 	});
+};
+
+firefly.Renderer.prototype.title = function(sources) {
+	if (this.titleXHRs) {
+		$.each(this.titleXHRs, function (idx, xhr) {
+			xhr.abort();
+		});
+	}
+	this.titleXHRs = {};
+	this.collectedTitles = {};
+
+	var dataServerToSources = this._buildDataServerToSourcesMap(sources);
+	var dataServer;
+
+	for (dataServer in dataServerToSources) {
+		var requestSources = dataServerToSources[dataServer];
+		this.titleXHRs[dataServer] = this.sendTitleXHR(dataServer, requestSources);
+	}
 };

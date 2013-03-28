@@ -118,11 +118,6 @@ firefly.Graph.prototype.setOptions = function(opts) {
  * - causes the legend to be updated
  */
 firefly.Graph.prototype.sourcesChanged = function(oldSources) {
-	// normalize the sourcelist for the Renderer functions.
-	// this just shaves off the hostname part, since the renderer already knows about that.
-	// NB: jQuery stupidly flattens the returned array, hence the extra wrapper
-	this._sourcesNormalized = $.map(this._sources, function(src, idx) {return [src.slice(1)];});
-
 	// if we delayed rendering of the graph (due to loading a saved set in the dash),
 	// we'll still want to do the appropriate drawing
 	if (this._sources.length && (!oldSources.length || !this._domInited)) {
@@ -147,8 +142,6 @@ firefly.Graph.prototype.sourcesChanged = function(oldSources) {
 };
 
 firefly.Graph.prototype.getRenderer = function() {
-	var dataServer = this.sourcerer.getDataServerNode(this._sources[0]);
-	var dataSource = this.sourcerer.getDataSourceNode(this._sources[0]);
 	return new firefly.Renderer(
 		this,
 		this.makeURL_,
@@ -270,7 +263,7 @@ firefly.Graph.prototype.setTitle = function(title) {
 
 firefly.Graph.prototype.updateTitle = function() {
 	if (!this._title) {
-		if (this.renderer) this.renderer.title(this._sourcesNormalized);
+		if (this.renderer) this.renderer.title(this.getSources());
 	} else {
 		$(this._titleEl).empty();
 		this._titleEl.innerText = this._title;
@@ -278,7 +271,7 @@ firefly.Graph.prototype.updateTitle = function() {
 };
 
 firefly.Graph.prototype.updateLegend = function() {
-	if (this.renderer) this.renderer.legend(this._sourcesNormalized);
+	if (this.renderer) this.renderer.legend(this.getSources());
 };
 
 firefly.Graph.prototype.updateGraph = function() {

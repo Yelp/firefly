@@ -33,7 +33,7 @@ self.onmessage = function(evt) {
 		}
 	}
 	currentXHRs = {};
-	previousXHR = {};
+	previousXHRs = {};
 	annotationsXHR && annotationsXHR.abort();
 
 	sourcesPerDataServer = {};
@@ -52,26 +52,20 @@ self.onmessage = function(evt) {
 	for (dataServer in sourcesPerDataServer) {
 		var dataServerSources = [];
 		var sortedDataServerPosKeys = Object.keys(sourcesPerDataServer[dataServer]).sort();
-		for (var _posKey = 0; _posKey < sortedDataServerPosKeys; _posKey++) {
+		for (var _posKey = 0; _posKey < sortedDataServerPosKeys.length; _posKey++) {
 			var posKey = sortedDataServerPosKeys[_posKey];
 			dataServerSources.push(sourcesPerDataServer[dataServer][posKey]);
-			if (!sourcesPerDataServer[dataServer][posKey]) throw JSON.stringify({data: posKey, ds:sourcesPerDataServer[dataServer]});
 		}
-		try {
-			// start our new request(s)
-			currentXHRs[dataServer] = fetchData(dataServer, dataServerSources, data.start, data.end);
-			if (data.options.overlay_previous_period) {
-				previousXHRs[dataServer] = fetchData(dataServer, dataServerSources, data.start - data.offset, data.end - data.offset);
-			}
-		} catch (err) {
-			throw JSON.stringify({data: dataServerSources, x:sourcesPerDataServer[dataServer], a:dataServer});
+		// start our new request(s)
+		currentXHRs[dataServer] = fetchData(dataServer, dataServerSources, data.start, data.end);
+		if (data.options.overlay_previous_period) {
+			previousXHRs[dataServer] = fetchData(dataServer, dataServerSources, data.start - data.offset, data.end - data.offset);
 		}
 	}
 	if (data.options.show_annotations) {
 		annotationsXHR = fetchAnnotations(data.start, data.end);
 	}
-
-}
+};
 
 function fetchData(dataServer, sources, start, end) {
 	var xhr = new XMLHttpRequest();
@@ -131,7 +125,7 @@ function anyXHRFailures(xhrObject) {
 	var src;
 	for (src in xhrObject) {
 		xhr = xhrObject[src];
-		if (xhr.status !== 200) {
+		if (xhr.readyState === 4 && xhr.status !== 200) {
 			return true;
 		}
 	}
@@ -143,7 +137,7 @@ function anyXHRsAborted(xhrObject) {
 	var src;
 	for (src in xhrObject) {
 		xhr = xhrObject[src];
-		if (xhr.status === 0) {
+		if (xhr.readyState === 4 && xhr.status === 0) {
 			return true;
 		}
 	}
@@ -202,55 +196,23 @@ function handleResponse() {
 
 	// make sure no errors happened
 	if (anyXHRFailures(currentXHRs) || anyXHRFailures(previousXHRs)) {
-		throw "Error: non-200 status received"
+		throw "Error: non-200 status received";
 	}
 
 	// otherwise let's process our incoming data
-	var currentData = dataObjFromXHRs(currentXHRs);
-	var previousData = []
+	var currentData = [];
+	var previousData = [];
 	var annotationsData = [];
 
+	currentData = dataObjFromXHRs(currentXHRs);
+	if (data.options.overlay_previous_period) {
+		previousData = dataObjFromXHRs(previousXHRs);
+	}
+	if (data.options.show_annotations) {
+		annotationsData = JSON.parse(annotationsXHR.responseText);
+	}
+
 	processData(currentData, previousData, annotationsData);
-
-	// if (data.options.show_annotations && annotationsXHR.status === 200) {
-	// 	annotationsData = JSON.parse(annotationsXHR.reponseText);
-	// }
-
-	// if (!data.options.show_annotations || annotationsXHR.readyState === 4){
-	// 	if (data.options.overlay_previous_period) {
-	// 		if (currentXHR.readyState === 4 && previousXHR.readyState === 4) {
-	// 			if (currentXHR.status === 200 && previousXHR.status === 200) {
-	// 				var currentData = JSON.parse(currentXHR.responseText);
-	// 				var previousData = JSON.parse(previousXHR.responseText);
-	// 				var annotationsData = [];
-	// 				if (data.options.show_annotations && annotationsXHR.status === 200){
-	// 					annotationsData = JSON.parse(annotationsXHR.responseText);
-	// 				}
-	// 				processData(currentData, previousData, annotationsData);
-	// 			} else {
-	// 				// status code 0 means aborted
-	// 				if (currentXHR.status > 0 || previousXHR.status > 0) {
-	// 					throw "Error: received " + currentXHR.status + ", " + previousXHR.status;
-	// 				}
-	// 			}
-	// 		}
-	// 	} else {
-	// 		if (currentXHR.readyState === 4) {
-	// 			if (currentXHR.status === 200) {
-	// 				var currentData = JSON.parse(currentXHR.responseText);
-	// 				var annotationsData = [];
-	// 				if (data.options.show_annotations && annotationsXHR.status === 200){
-	// 					annotationsData = JSON.parse(annotationsXHR.responseText);
-	// 				}
-	// 				processData(currentData, [], annotationsData);
-	// 			} else {
-	// 				if (currentXHR.status > 0) {
-	// 					throw "Error: received " + currentXHR.status;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
 }
 
 function processData(currentData, previousData, annotationsData) {
@@ -300,14 +262,14 @@ function processData(currentData, previousData, annotationsData) {
 	for (var i=0; i<previousLayers.length; i++) previousLayers[i].shift = data.offset * 1000;
 
 	// restructure annotations so we have the correct types for all the data
-	var annotations = []
-	for(idx in annotationsData){
+	var annotations = [];
+	for(var idx in annotationsData){
 		annotations.push({
 			id: parseInt(annotationsData[idx].id),
 			type: annotationsData[idx].type,
 			description: annotationsData[idx].description,
 			time: parseFloat(annotationsData[idx].time) * 1000
-		})
+		});
 	}
 
 	self.postMessage({
