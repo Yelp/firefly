@@ -152,7 +152,6 @@ firefly.Graph.prototype.getRenderer = function() {
 	return new firefly.Renderer(
 		this,
 		this.makeURL_,
-		dataServer.name,
 		this._graphEl,
 		this._titleEl,
 		this._legendEl,
@@ -283,12 +282,12 @@ firefly.Graph.prototype.updateLegend = function() {
 };
 
 firefly.Graph.prototype.updateGraph = function() {
-	if (this.renderer) this.renderer.render(this._sourcesNormalized, this.zoom, this._options);
+	if (this.renderer) this.renderer.render(this.zoom, this._options);
 };
 
 firefly.Graph.prototype.resizeGraph = function() {
 	if (this.renderer) {
 		this.renderer.resize();
-		this.renderer.render(this._sourcesNormalized, this.zoom, this._options);
+		this.renderer.render(this.zoom, this._options);
 	}
 };

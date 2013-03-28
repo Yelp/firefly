@@ -6,14 +6,17 @@ goog.require('goog.debug.Logger');
 /**
  * @constructor
  */
-firefly.Renderer = function(graph, makeURL, dataServer, container, titleEl, legendEl, containerHeight) {
+firefly.Renderer = function(graph, makeURL, container, titleEl, legendEl, containerHeight) {
 	this.makeURL_ = makeURL;
 	this.graph_ = graph;
-	this.dataServer = dataServer;
+	this.sources = graph.getSources();
 	this.container = container;
 	this.legendEl = legendEl;
 	this.titleEl = titleEl;
 	this.containerHeight_ = containerHeight;
+
+	// TODO (fhats) kill me
+	this.dataServer = this.sources[0][0];
 
 	// create the tooltip element, which we'll use on mouseover
 	// to show data point details
@@ -74,13 +77,13 @@ firefly.Renderer.prototype._createSVG = function() {
 	checkDiscontinuous = function(d) {return d.y !== null;}
 
 	// custom interpolator for single points
-	interpol = function(points) { 
+	interpol = function(points) {
 		//This is a simple linear interpolator except when there are isolated points.
 		//When this is the case, we draw a short "line" 0.2 px to the side of the original
 		//in order to form a point.  This allows for drawing something like a scatter plot.
 		if (points.length == 1) {
 			points.push([points[0][0] + 0.7, points[0][1]]);
-		} 
+		}
 		return points.join("L");
 	}
 
@@ -360,15 +363,14 @@ firefly.Renderer.prototype.resize = function() {
 };
 
 
-firefly.Renderer.prototype.render = function (sources, zoom, options) {
+firefly.Renderer.prototype.render = function (zoom, options) {
 	options = options || {};
 	zoom = parseInt(zoom);
 	// tell our worker to retrieve and process the data
 	this.worker.postMessage({
-		"sources"    : sources,
+		"sources"    : this.sources,
 		"zoom"       : zoom,
 		"options"    : options,
-		"dataServer" : this.dataServer,
 		"width"      : this.width,
 		"token"      : this.graph_.sourcerer.getToken()
 	});
