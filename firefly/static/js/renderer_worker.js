@@ -240,6 +240,9 @@ function processData(currentData, previousData, annotationsData) {
 			layer.data = [];
 
 			for (var i=0; i<data.length; i++) {
+				// If the data server had no data for this timestamp (rather
+				// than having NULL for this timestamp), we should just skip
+				// it.
 				if (data[i].v[l] === NO_DATA_FOR_TIMESTAMP) continue;
 				var x = data[i].t * 1000;
 				var y = data[i].v[l];
