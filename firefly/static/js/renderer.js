@@ -888,7 +888,6 @@ firefly.Renderer.prototype._dsDescFromSourcerer = function(dataServerURL) {
 	var matchingSources = $.grep(this.graph_.sourcerer._sources.children, function(source) {
 		return source.name === dataServerURL;
 	});
-	console.log(matchingSources);
 	if (!matchingSources[0]) return "?";
 	return matchingSources[0].desc;
 };
