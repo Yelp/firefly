@@ -6,6 +6,8 @@ var previousXHRs;
 var annotationsXHR;
 var sourcesPerDataServer;
 
+var NO_DATA_FOR_TIMESTAMP = "nodata";
+
 self.onmessage = function(evt) {
 	data = evt.data;
 	data.end = Math.floor(Date.now() / 1000);
@@ -144,10 +146,15 @@ function anyXHRsAborted(xhrObject) {
 	return false;
 }
 
-function makeNullArray(size) {
+/**
+ * Creates a placeholder array full of sentinels that indicate
+ * the data source had no data for a time stamp, rather than
+ * the data server returning null for that timestamp.
+ */
+function makeNoDataArray(size) {
 	var arr = [];
 	for (var i = 0; i < size; i++) {
-		arr.push(null);
+		arr.push(NO_DATA_FOR_TIMESTAMP);
 	}
 	return arr;
 }
@@ -160,7 +167,7 @@ function dataObjFromXHRs(xhrs) {
 		response = JSON.parse(xhrs[dataServer].responseText);
 		for (var pointIdx = 0; pointIdx < response.length; pointIdx++) {
 			var point = response[pointIdx];
-			parsedData[point.t] = parsedData[point.t] || makeNullArray(data.sources.length);
+			parsedData[point.t] = parsedData[point.t] || makeNoDataArray(data.sources.length);
 			for (var posIdx = 0; posIdx < point.v.length; posIdx++) {
 				var originalPosition = Object.keys(sourcesPerDataServer[dataServer]).sort()[posIdx];
 				parsedData[point.t][originalPosition] = point.v[posIdx];
@@ -233,6 +240,7 @@ function processData(currentData, previousData, annotationsData) {
 			layer.data = [];
 
 			for (var i=0; i<data.length; i++) {
+				if (data[i].v[l] === NO_DATA_FOR_TIMESTAMP) continue;
 				var x = data[i].t * 1000;
 				var y = data[i].v[l];
 				if (self.data.options.smooth && i > 0 && y !== null) {

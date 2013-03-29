@@ -851,7 +851,8 @@ firefly.Renderer.prototype.sendLegendXHR = function(dataServer, sources, positio
 
 			this.collectedLegends[dataServer] = data['legend'];
 			$.each(data['legend'], function(legend_idx, legend) {
-				that.orderedLegends[positions[legend_idx]] = legend;
+				that.orderedLegends[positions[legend_idx]] = legend[0];
+				that.orderedLegends[positions[legend_idx]].unshift(that._dsDescFromSourcerer(dataServer));
 			});
 			if (Object.keys(this.legendXHRs).length !== Object.keys(this.collectedLegends).length) return;
 
@@ -862,7 +863,7 @@ firefly.Renderer.prototype.sendLegendXHR = function(dataServer, sources, positio
 				var div = $("<div>").addClass("color").appendTo(li);
 
 				$(div).css("background-color", that.hsl(i / totalSourceCount));
-				$("<span>").html( source[0].join(RIGHT_ARROW) ).appendTo(li);
+				$("<span>").html( source.join(RIGHT_ARROW) ).appendTo(li);
 			});
 
 			$(this.legendEl).empty().append(ul);
@@ -908,6 +909,19 @@ firefly.Renderer.prototype.arrayLongestCommonPrefix = function(array1, array2) {
 		}
 	}
 	return result;
+};
+
+/**
+ * Gets the description of the data server at dataServerURL from the graph's
+ * Sourcerer object.
+ */
+firefly.Renderer.prototype._dsDescFromSourcerer = function(dataServerURL) {
+	var matchingSources = $.grep(this.graph_.sourcerer._sources.children, function(source) {
+		return source.name === dataServerURL;
+	});
+	console.log(matchingSources);
+	if (!matchingSources[0]) return "?";
+	return matchingSources[0].desc;
 };
 
 firefly.Renderer.prototype.sendTitleXHR = function(dataServer, sources) {
