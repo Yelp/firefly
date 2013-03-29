@@ -837,63 +837,32 @@ firefly.Renderer.prototype._buildDataServerToSourcePositionMap = function(source
 	return result;
 };
 
-firefly.Renderer.prototype.sendLegendXHR = function(dataServer, sources, positions, totalSourceCount) {
-	return $.ajax({
-		url: dataServer + '/legend',
-		dataType: 'json',
-		data: {
-			'sources': JSON.stringify(sources),
-			'token'  : this.graph_.sourcerer.getToken()
-		},
-		context: this,
-		success: function(data) {
-			var that = this;
-
-			this.collectedLegends[dataServer] = data['legend'];
-			$.each(data['legend'], function(legend_idx, legend) {
-				that.orderedLegends[positions[legend_idx]] = legend[0];
-				that.orderedLegends[positions[legend_idx]].unshift(that._dsDescFromSourcerer(dataServer));
-			});
-			if (Object.keys(this.legendXHRs).length !== Object.keys(this.collectedLegends).length) return;
-
-			var ul = $("<ul>");
-
-			$.each(this.orderedLegends, function(i, source) {
-				var li = $("<li>").appendTo(ul);
-				var div = $("<div>").addClass("color").appendTo(li);
-
-				$(div).css("background-color", that.hsl(i / totalSourceCount));
-				$("<span>").html( source.join(RIGHT_ARROW) ).appendTo(li);
-			});
-
-			$(this.legendEl).empty().append(ul);
-			this.resize();
-		}
-	});
-};
-
 firefly.Renderer.prototype.legend = function(sources) {
-	if (this.legendXHRs) {
-		$.each(this.legendXHRs, function(idx, xhr) {
-			xhr.abort();
-		});
-	}
-	this.legendXHRs = {};
-	this.collectedLegends = {};
-	this.orderedLegends = [];
-	for (var i = 0; i < sources.length; i++){
-		this.orderedLegends.push(null);
+	var titleString = $(this.titleEl).html();
+	var titleElements = this.titleElements;
+	var numTitleElements = titleElements.length;
+
+	if (numTitleElements === 1 && titleElements[0] === titleString) {
+		numTitleElements = 0;
 	}
 
-	var dataServerToSources = this._buildDataServerToSourcesMap(sources);
-	var dataServerToPositions = this._buildDataServerToSourcePositionMap(sources);
-	var dataServer;
+	var sliceStart = 2 + numTitleElements;
 
-	for (dataServer in dataServerToSources) {
-		var requestSources = dataServerToSources[dataServer];
-		var requestPositions = dataServerToPositions[dataServer];
-		this.legendXHRs[dataServer] = this.sendLegendXHR(dataServer, requestSources, requestPositions, sources.length);
-	}
+	var that = this;
+	var ul = $("<ul>");
+	$.each(sources, function(i, source) {
+		var dataServerDesc = that._dsDescFromSourcerer(source[0]);
+		var li = $("<li>").appendTo(ul);
+		var div = $("<div>").addClass("color").appendTo(li);
+
+		var displayedSourceComponents = source.slice(sliceStart);
+		displayedSourceComponents.unshift(dataServerDesc);
+
+		$(div).css("background-color", that.hsl(i / sources.length));
+		$("<span>").html(displayedSourceComponents.join(RIGHT_ARROW)).appendTo(li);
+	});
+	$(this.legendEl).empty().append(ul);
+	this.resize();
 };
 
 firefly.Renderer.prototype.arrayLongestCommonPrefix = function(array1, array2) {
@@ -941,6 +910,11 @@ firefly.Renderer.prototype.sendTitleXHR = function(dataServer, sources) {
 			newTitle = newTitle.reduce(this.arrayLongestCommonPrefix);
 
 			$(this.titleEl).html( newTitle.join(RIGHT_ARROW));
+			this.titleElements = newTitle;
+
+			// The graph title is linked to the legend, so we can only compute
+			// the legend when we have a title.
+			this.graph_.updateLegend();
 		}
 	});
 };
