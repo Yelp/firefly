@@ -65,7 +65,9 @@ self.onmessage = function(evt) {
 		}
 	}
 	if (data.options.show_annotations) {
-		annotationsXHR = fetchAnnotations(data.start, data.end);
+		// TODO (fhats): Pull annotations from all the different data servers, not just one
+		// TODO (fhats): Annotations shouldn't require any knowledge of the sources.
+		annotationsXHR = fetchAnnotations(data.sources[0][0], data.sources, data.start, data.end);
 	}
 };
 
@@ -84,10 +86,10 @@ function fetchData(dataServer, sources, start, end) {
 	return xhr;
 }
 
-function fetchAnnotations(start, end) {
+function fetchAnnotations(dataServer, sources, start, end) {
 	var xhr = new XMLHttpRequest();
-	var url = data.dataServer + "/annotations?" +
-		"sources=" + encodeURIComponent(JSON.stringify(data.sources)) +
+	var url = dataServer + "/annotations?" +
+		"sources=" + encodeURIComponent(JSON.stringify(sources.map(function (x){ return x.slice(1); }))) +
 		"&start="  + (start - 60) + // buffer for one minute
 		"&end="    + end +
 		"&width="  + data.width +
@@ -113,7 +115,7 @@ function allXHRsComplete() {
 		xhr = currentXHRs[src];
 		if (xhr.readyState !== 4) return false;
 	}
-	if (data.options.show_annotations && annotationsXHR.readyState !== 4) return false;
+	if (data.options.show_annotations && annotationsXHR && annotationsXHR.readyState !== 4) return false;
 
 	return true;
 }
