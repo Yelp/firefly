@@ -127,7 +127,6 @@ firefly.Graph.prototype.sourcesChanged = function(oldSources) {
 		this.renderer = this.getRenderer();
 		this.updateGraph();
 		this.updateTitle();
-		this.updateLegend();
 	} else if ((oldSources.length || !this._domInited) && !this._sources.length) {
 		if (this.renderer) {
 			this.renderer.cleanup();
@@ -137,7 +136,6 @@ firefly.Graph.prototype.sourcesChanged = function(oldSources) {
 	} else if (oldSources.length && this._sources.length) {
 		this.updateGraph();
 		this.updateTitle();
-		this.updateLegend();
 	}
 };
 
@@ -267,6 +265,7 @@ firefly.Graph.prototype.updateTitle = function() {
 	} else {
 		$(this._titleEl).empty();
 		this._titleEl.innerText = this._title;
+		this.updateLegend();
 	}
 };
 

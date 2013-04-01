@@ -839,8 +839,15 @@ firefly.Renderer.prototype._buildDataServerToSourcePositionMap = function(source
 
 firefly.Renderer.prototype.legend = function(sources) {
 	var titleString = $(this.titleEl).html();
-	var titleElements = this.titleElements;
-	var numTitleElements = titleElements.length;
+	var titleElements;
+	var numTitleElements;
+	if (this.titleElements) {
+		titleElements = this.titleElements;
+		numTitleElements = titleElements.length || 0;
+	} else {
+		titleElements = [];
+		numTitleElements = 0;
+	}
 
 	if (numTitleElements === 1 && titleElements[0] === titleString) {
 		numTitleElements = 0;
