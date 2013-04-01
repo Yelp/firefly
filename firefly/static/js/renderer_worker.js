@@ -217,8 +217,15 @@ function handleResponse() {
 	if (data.options.overlay_previous_period) {
 		previousData = dataObjFromXHRs(previousXHRs);
 	}
-	if (data.options.show_annotations) {
-		annotationsData = JSON.parse(annotationsXHR.responseText);
+	if (data.options.show_annotations && annotationsXHR) {
+		try {
+			annotationsData = JSON.parse(annotationsXHR.responseText);
+		} catch (err) {
+			// Sometimes annotations don't come back as '[]' when empty.
+			// I'm not sure why.
+			// Let's just assume there's nothing to show.
+			annotationsData = [];
+		}
 	}
 
 	processData(currentData, previousData, annotationsData);
