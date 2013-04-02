@@ -155,7 +155,7 @@ firefly.GraphEdit.prototype.close = function(save) {
 firefly.GraphEdit._domTemplate = $([
 	"<div class='graphedit'>",
 		"<div class='pane data-sources'>",
-			"<h2>Data Sources <small>(only <b>one</b> datacenter supported per graph)</small></h2>",
+			"<h2>Data Sources</h2>",
 			"<div></div>",
 		"</div>",
 		"<div class='pane temp-graph'>",
