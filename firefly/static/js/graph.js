@@ -270,7 +270,7 @@ firefly.Graph.prototype.updateTitle = function() {
 };
 
 firefly.Graph.prototype.updateLegend = function() {
-	if (this.renderer) this.renderer.legend(this.getSources());
+	if (this.renderer) this.renderer.legend(this.getSources(), this._options.legend_left_trim, this._options.legend_right_trim);
 };
 
 firefly.Graph.prototype.updateGraph = function() {

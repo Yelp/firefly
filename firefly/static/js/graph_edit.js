@@ -256,6 +256,14 @@ firefly.GraphEdit.prototype.controls = [
 			{'value': '1', 'label': 'Area Graph'}
 		]},
 	]},
+	{'label': "Legend Options", 'groups': [
+		{'name': 'legend_left_trim', 'inputType': 'number', 'valueType': 'integer', 'items': [
+			{'value': undefined, 'label': "Left trim items"}
+		]},
+		{'name': 'legend_right_trim', 'inputType': 'number', 'valueType': 'integer', 'items': [
+			{'value': undefined, 'label': "Right trim items"}
+		]},
+	]},
 	{'label': "Annotations Options", 'groups': [
 		{'name': 'show_annotations', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Show Annotations'},

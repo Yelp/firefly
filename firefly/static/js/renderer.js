@@ -837,10 +837,20 @@ firefly.Renderer.prototype._buildDataServerToSourcePositionMap = function(source
 	return result;
 };
 
-firefly.Renderer.prototype.legend = function(sources) {
+firefly.Renderer.prototype.legend = function(sources, leftTrim, rightTrim) {
 	var titleString = $(this.titleEl).html();
 	var titleElements;
 	var numTitleElements;
+
+	// If leftTrim or rightTrim aren't specified or are not ints, we'll just
+	// set them to zero.
+	if (!leftTrim) {
+		leftTrim = 0;
+	}
+	if (!rightTrim) {
+		rightTrim = 0;
+	}
+
 	if (this.titleElements) {
 		titleElements = this.titleElements;
 		numTitleElements = titleElements.length || 0;
@@ -853,23 +863,46 @@ firefly.Renderer.prototype.legend = function(sources) {
 		numTitleElements = 0;
 	}
 
-	var sliceStart = 2 + numTitleElements;
 
 	var that = this;
 	var ul = $("<ul>");
+
+	var multipleDataServers = this.uniqueSources(sources).length > 1;
+
 	$.each(sources, function(i, source) {
+		// Provides some small functionality for trimming items off the
+		// left or right side of the legend
+		var sliceStart = 2 + numTitleElements + leftTrim;
+		var sliceEnd = source.length - rightTrim;
+
+		// Too much trimming; we'll just assume the user wanted an empty display
+		// (minus the data server if necessary)
+		if (sliceStart >= sliceEnd) {
+			sliceStart = source.length;
+			sliceEnd = source.length;
+		}
+
 		var dataServerDesc = that._dsDescFromSourcerer(source[0]);
 		var li = $("<li>").appendTo(ul);
 		var div = $("<div>").addClass("color").appendTo(li);
 
-		var displayedSourceComponents = source.slice(sliceStart);
-		displayedSourceComponents.unshift(dataServerDesc);
+		var displayedSourceComponents = source.slice(sliceStart, sliceEnd);
+		if (multipleDataServers)
+			displayedSourceComponents.unshift(dataServerDesc);
 
 		$(div).css("background-color", that.hsl(i / sources.length));
 		$("<span>").html(displayedSourceComponents.join(RIGHT_ARROW)).appendTo(li);
 	});
 	$(this.legendEl).empty().append(ul);
 	this.resize();
+};
+
+firefly.Renderer.prototype.uniqueSources = function(sources) {
+	return $.map(sources, function(x) { return x[0]; }).reduce(function(prev, cur) {
+		if (prev.indexOf(cur) === -1)
+			prev.push(cur);
+		return prev;
+	}, []);
 };
 
 firefly.Renderer.prototype.arrayLongestCommonPrefix = function(array1, array2) {
