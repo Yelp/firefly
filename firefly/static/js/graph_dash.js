@@ -395,6 +395,11 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 	if (graphEl.length) {
 		graphEl = graphEl.get(0);
 
+		pasteGraphDisabled = instance.clipboard_graph_ ? false : true;
+		if (typeof(Storage) !== "undefined") {
+			pasteGraphDisabled = localStorage.getItem("firefly-clipboard") ? false : true;
+		}
+
 		menuItems.push.apply(menuItems, [
 			{"label": "Graph", "header": true},
 			{"label": "Edit Graph", "action": function() {
@@ -429,14 +434,25 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 			{"label": "Cut Graph", "action": function() {
 				var graph = $(evt.target).retrieveGraph();
 				instance.clipboard_graph_ = graph.serialize();
+				if (typeof(Storage) !== "undefined") {
+					localStorage.setItem("firefly-clipboard", JSON.stringify($(evt.target).retrieveGraph().serialize()));
+				}
 				graph.clear();
 				$(instance.container).trigger('ff:dashchange');
 			}},
 			{"label": "Copy Graph", "action": function() {
 				instance.clipboard_graph_ = $(evt.target).retrieveGraph().serialize();
+				if (typeof(Storage) !== "undefined") {
+					localStorage.setItem("firefly-clipboard", JSON.stringify($(evt.target).retrieveGraph().serialize()));
+				}
 			}},
-			{"label": "Paste Graph", "disabled": (instance.clipboard_graph_ ? false : true), "action": function() {
-				$(evt.target).retrieveGraph().sync(instance.clipboard_graph_);
+			{"label": "Paste Graph", "disabled": pasteGraphDisabled, "action": function() {
+				if (typeof(Storage) !== "undefined") {
+					var graph = JSON.parse(localStorage.getItem("firefly-clipboard"));
+					$(evt.target).retrieveGraph().sync(graph);
+				} else {
+					$(evt.target).retrieveGraph().sync(instance.clipboard_graph_);
+				}
 				$(instance.container).trigger('ff:dashchange');
 			}},
 			{"label": "Isolate Graph", "action": function() {
