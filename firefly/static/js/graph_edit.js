@@ -155,7 +155,7 @@ firefly.GraphEdit.prototype.close = function(save) {
 firefly.GraphEdit._domTemplate = $([
 	"<div class='graphedit'>",
 		"<div class='pane data-sources'>",
-			"<h2>Data Sources <small>(only <b>one</b> datacenter supported per graph)</small></h2>",
+			"<h2>Data Sources</h2>",
 			"<div></div>",
 		"</div>",
 		"<div class='pane temp-graph'>",
@@ -254,6 +254,14 @@ firefly.GraphEdit.prototype.controls = [
 		]},
 		{'name': 'area_graph', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Area Graph'}
+		]},
+	]},
+	{'label': "Legend Options", 'groups': [
+		{'name': 'legend_left_trim', 'inputType': 'number', 'valueType': 'integer', 'items': [
+			{'value': undefined, 'label': "Left trim items"}
+		]},
+		{'name': 'legend_right_trim', 'inputType': 'number', 'valueType': 'integer', 'items': [
+			{'value': undefined, 'label': "Right trim items"}
 		]},
 	]},
 	{'label': "Annotations Options", 'groups': [
