@@ -201,7 +201,7 @@ Runs in test mode:
     if not options.omit_data_server:
         # Allow the data server to initialize itself and attach itself to the IOLoop
         try:
-            initialize_data_server(config["data_server"], secret_key=config["secret_key"], ioloop=tornado.ioloop.IOLoop.instance())
+            initialize_data_server(config["data_server"], secret_key=config["secret_key"])
         except socket.error as exc:
             log.error('Problem starting data server: %s' % str(exc))
             sys.exit(1)
@@ -209,10 +209,26 @@ Runs in test mode:
     if not options.omit_ui_server:
         # Allow the UI server to initialize itself and attach itself to the IOLoop
         try:
-            initialize_ui_server(config["ui_server"], secret_key=config["secret_key"], ioloop=tornado.ioloop.IOLoop.instance())
+            initialize_ui_server(config["ui_server"], secret_key=config["secret_key"])
         except socket.error as exc:
-            log.error('Problem starting ui server: %s' % str(exc))
-            sys.exit(1)
+            # The following hack is unfortunate, but necessary.
+            # When Tornado forks, its does the right thing when an HTTP server
+            # is configured to have as many workers as procs that gets forked.
+            # However, if another HTTPServer is on the IOLoop, it will fail to
+            # bind to the right address somewhere in the process.
+            # This is OK, because the predecessor procs will live on and serve
+            # traffic correctly.
+            # This has the unfortunate side-effect of masking instances in
+            # development when users accidentally try to start multiple
+            # instances of Firefly running. The following warning message is
+            # intended to provide a hint for this case in development, and can
+            # be safely ignored in production.
+            if "Address already in use" in str(exc):
+                log.warning("UI server socket not bound: %s. This is probably due to multi-processing and can safely be ignored." % str(exc))
+                pass
+            else:
+                log.error('Problem starting ui server: %s' % str(exc))
+                sys.exit(1)
 
     try:
         # Kick everything off

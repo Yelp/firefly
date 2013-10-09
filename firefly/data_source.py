@@ -14,6 +14,7 @@ class DataSource(object):
 
     def __init__(self, *args, **kwargs):
         self.logger = logging.getLogger(__name__)
+        self.ui_exclude = bool(kwargs.get('ui_exclude', False))
 
     def list_path(self, path):
         """given an array of path components, list the (presumable) directory"""
