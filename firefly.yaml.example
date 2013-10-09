@@ -37,6 +37,9 @@ data_server:
         data_sources.ganglia_rrd.GangliaRRD:
             rrdcached_socket: null
             rrdcached_storage: null
+            # Uncomment the following line to ignore this data source in the UI
+            # Useful for aggregating datasources that talk to themselves.
+            # ui_exclude: true
         data_sources.stat_monster_rrd.StatMonsterRRD:
             # Location of the rrdcached socket file
             rrdcached_socket: null

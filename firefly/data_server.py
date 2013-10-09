@@ -55,11 +55,13 @@ class SourcesHandler(tornado.web.RequestHandler):
         self.write(json.dumps(contents))
 
     def _list_sourcelists(self):
+        data_sources = self.application.settings['data_sources']
+
         sourcelists = [{
             'name': src._FF_KEY,
             'type': 'data_source',
             'desc': src.DESC,
-            'children': None} for src in self.application.settings['data_sources']]
+            'children': None} for src in data_sources if not src.ui_exclude]
         return sourcelists
 
 
@@ -211,10 +213,8 @@ def parse_sources(sources, data_sources_by_key):
     srcs = [source[1:] for source in sources]
     return ds, srcs
 
-def initialize_data_server(config, secret_key=None, ioloop=None):
-    if ioloop is None:
-        ioloop = tornado.ioloop.IOLoop.instance()
 
+def initialize_data_server(config, secret_key=None):
     # connect to the database to store annotation in
     # I kind of hate having the schema for this DB here, but I'm going to leave it for to retain parity with ui_server.py
     db_conn = sqlite3.connect(config['db_file'], isolation_level=None)
@@ -241,7 +241,8 @@ def initialize_data_server(config, secret_key=None, ioloop=None):
         (r"/sources", SourcesHandler)], **config)
 
     # start the main server
-    http_server = tornado.httpserver.HTTPServer(application, io_loop=ioloop)
-    http_server.listen(config["port"])
+    http_server = tornado.httpserver.HTTPServer(application)
+    http_server.bind(config["port"])
+    http_server.start(0)
 
     log.info('Firefly data server started on port %d' % config["port"])
