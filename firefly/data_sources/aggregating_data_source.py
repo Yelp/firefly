@@ -307,7 +307,7 @@ class AggregatingDataSource(firefly.data_source.DataSource):
         for data_source in self.data_sources:
             top_level_stats = self._request_paths_from_ds(data_source, None)
 
-            if stat_key in top_level_stats:
+            if stat_key in [stat['name'] for stat in top_level_stats]:
                 self.key_mapping_cache[stat_key] = data_source
                 return data_source
         else:
