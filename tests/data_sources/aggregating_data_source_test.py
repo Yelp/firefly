@@ -598,7 +598,7 @@ class AggregatingDataSourceTest(T.TestCase):
 		test_key = 'src.some_test_stat'
 
 		with self._mock_ds_method('_request_paths_from_ds') as mock_request_paths:
-			mock_request_paths.return_value = ['a', 'b', 'c']
+			mock_request_paths.return_value = [{"name": "a"}, {"name": "b"}, {"name": "c"}]
 			actual_ds = self.data_source._find_data_source_for_stat_key(test_key)
 			T.assert_equal(mock_request_paths.call_count, len(self.test_data_sources))
 			for ds in self.data_source.data_sources:
