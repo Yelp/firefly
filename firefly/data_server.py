@@ -155,7 +155,7 @@ class AnnotationsHandler(GraphBaseHandler):
 
         cursor = self.settings["db"].cursor()
 
-        annotations_rows = cursor.execute('SELECT type, description, time, id FROM annotations WHERE time >= ? and time <= ?', (params['start'], params['end']))
+        annotations_rows = cursor.execute('SELECT type, description, time, id FROM annotations WHERE time >= ? and time <= ? ORDER BY time DESC LIMIT 50', (params['start'], params['end']))
 
         self.set_header('Content-Type', 'application/json')
         self.set_header("Cache-Control", "no-cache, must-revalidate")
