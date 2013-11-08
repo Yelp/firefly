@@ -42,7 +42,7 @@ def import_module(dotted_path):
 def setup_logging(config):
     """Sets up logging to arbitrary loggers"""
     if config.get("loggingconf"):
-        logging.config.fileConfig(config["loggingconf"])
+        logging.config.fileConfig(config["loggingconf"], disable_existing_loggers=0)
     else:
         logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
