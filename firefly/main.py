@@ -27,7 +27,6 @@ import yaml
 from firefly.data_server import initialize_data_server
 from firefly.ui_server import initialize_ui_server
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log = logging.getLogger('firefly')
 
 
@@ -68,6 +67,10 @@ Runs in test mode:
         dest='config_file',
         default=None,
         help="Specify a configuration file to read from.")
+    parser.add_option('--loggingconf',
+        dest='loggingconf',
+        default=None,
+        help="Specify a configuration file for logging.")
     parser.add_option('--testing',
         dest='testing',
         action='store_true',
@@ -147,6 +150,11 @@ Runs in test mode:
 
     config["testing"] = options.testing
     config["data_server"]["data_sources_by_key"] = {}
+
+    # setup logging in a configurable manner
+    if options.loggingconf:
+        config["loggingconf"] = options.loggingconf
+    util.setup_logging(config)
 
     if options.config_file is None:
         config["config_file"] = "firefly.yaml"

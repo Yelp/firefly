@@ -25,7 +25,6 @@ import tornado.httpserver
 
 import util
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log = logging.getLogger('firefly_data_server')
 
 DEFAULT_DATA_SERVER_PORT = 8890

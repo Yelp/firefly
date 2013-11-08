@@ -18,7 +18,6 @@ import tornado.httpserver
 
 import util
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log = logging.getLogger('firefly_ui_server')
 
 
