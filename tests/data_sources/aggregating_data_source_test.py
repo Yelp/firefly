@@ -578,9 +578,9 @@ class AggregatingDataSourceTest(T.TestCase):
 
 		def fake_paths_from_ds(data_source, path):
 			if data_source == expected_data_source:
-				return test_key
+				return [{"name": test_key},]
 			else:
-				return 'src.not_our_key'
+				return [{"name": "src.not_our_key"},]
 
 		with mock.patch.object(self.data_source, '_request_paths_from_ds', fake_paths_from_ds):
 			actual_ds = self.data_source._find_data_source_for_stat_key(test_key)
@@ -598,7 +598,7 @@ class AggregatingDataSourceTest(T.TestCase):
 		test_key = 'src.some_test_stat'
 
 		with self._mock_ds_method('_request_paths_from_ds') as mock_request_paths:
-			mock_request_paths.return_value = ['a', 'b', 'c']
+			mock_request_paths.return_value = [{"name": "a"}, {"name": "b"}, {"name": "c"}]
 			actual_ds = self.data_source._find_data_source_for_stat_key(test_key)
 			T.assert_equal(mock_request_paths.call_count, len(self.test_data_sources))
 			for ds in self.data_source.data_sources:
