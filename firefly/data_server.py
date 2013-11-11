@@ -29,6 +29,10 @@ log = logging.getLogger('firefly_data_server')
 
 DEFAULT_DATA_SERVER_PORT = 8890
 
+# The number of annotations to draw before we stop
+# This cut-off exists because browsers are unhappy with a lot of these
+ANNOTATIONS_CUT_OFF = 300
+
 def token_authed(method):
     def new_method(self):
         token = self.get_argument('token')
@@ -154,7 +158,8 @@ class AnnotationsHandler(GraphBaseHandler):
 
         cursor = self.settings["db"].cursor()
 
-        annotations_rows = cursor.execute('SELECT type, description, time, id FROM annotations WHERE time >= ? and time <= ?', (params['start'], params['end']))
+        annotations_rows = cursor.execute('SELECT type, description, time, id FROM annotations WHERE time >= ? and time <= ? ORDER BY time DESC LIMIT ?',
+                                          (params['start'], params['end'], ANNOTATIONS_CUT_OFF))
 
         self.set_header('Content-Type', 'application/json')
         self.set_header("Cache-Control", "no-cache, must-revalidate")
