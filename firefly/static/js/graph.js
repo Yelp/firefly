@@ -64,6 +64,12 @@ firefly.Graph.prototype.sync = function(serialized) {
 	}
 };
 
+/** sync this graph's options to the serialized representation passed in */
+firefly.Graph.prototype.syncOptions = function(serialized) {
+	this._options = serialized;
+	this.updateGraph();
+};
+
 
 firefly.Graph.prototype.clear = function() {
 	this.sync({});
@@ -112,11 +118,6 @@ firefly.Graph.prototype.setOptions = function(opts) {
  * - causes the legend to be updated
  */
 firefly.Graph.prototype.sourcesChanged = function(oldSources) {
-	// normalize the sourcelist for the Renderer functions.
-	// this just shaves off the hostname part, since the renderer already knows about that.
-	// NB: jQuery stupidly flattens the returned array, hence the extra wrapper
-	this._sourcesNormalized = $.map(this._sources, function(src, idx) {return [src.slice(1)];});
-
 	// if we delayed rendering of the graph (due to loading a saved set in the dash),
 	// we'll still want to do the appropriate drawing
 	if (this._sources.length && (!oldSources.length || !this._domInited)) {
@@ -126,7 +127,6 @@ firefly.Graph.prototype.sourcesChanged = function(oldSources) {
 		this.renderer = this.getRenderer();
 		this.updateGraph();
 		this.updateTitle();
-		this.updateLegend();
 	} else if ((oldSources.length || !this._domInited) && !this._sources.length) {
 		if (this.renderer) {
 			this.renderer.cleanup();
@@ -136,17 +136,13 @@ firefly.Graph.prototype.sourcesChanged = function(oldSources) {
 	} else if (oldSources.length && this._sources.length) {
 		this.updateGraph();
 		this.updateTitle();
-		this.updateLegend();
 	}
 };
 
 firefly.Graph.prototype.getRenderer = function() {
-	var dataServer = this.sourcerer.getDataServerNode(this._sources[0]);
-	var dataSource = this.sourcerer.getDataSourceNode(this._sources[0]);
 	return new firefly.Renderer(
 		this,
 		this.makeURL_,
-		dataServer.name,
 		this._graphEl,
 		this._titleEl,
 		this._legendEl,
@@ -173,10 +169,19 @@ firefly.Graph.prototype.setHeight = function(height) {
 /** set up the cell when transitioning to empty state */
 firefly.Graph.prototype.setDOMAsEmpty = function() {
 	var frag = document.createDocumentFragment();
-	var a = document.createElement('a');
-	a.innerHTML = "add sources";
-	$(a).attr({'rel': 'action-edit-sources', 'href': '#'});
-	frag.appendChild(a);
+
+	var addSourcesLink = document.createElement('a');
+	$(addSourcesLink).text("add sources");
+	$(addSourcesLink).attr({'rel': 'action-edit-sources', 'href': '#'});
+	frag.appendChild(addSourcesLink);
+
+	frag.appendChild(document.createElement('hr'));
+
+	var listDashboardsLink = document.createElement('a');
+	$(listDashboardsLink).text("list dashboards");
+	$(listDashboardsLink).attr({'href': this.makeURL_("dashboards")});
+	frag.appendChild(listDashboardsLink);
+
 	this._legendEl = this._titleEl = this._graphEl = null;
 
 	$(this.container).empty();
@@ -256,24 +261,31 @@ firefly.Graph.prototype.setTitle = function(title) {
 
 firefly.Graph.prototype.updateTitle = function() {
 	if (!this._title) {
-		if (this.renderer) this.renderer.title(this._sourcesNormalized);
+		if (this.renderer) this.renderer.title(this.getSources());
 	} else {
 		$(this._titleEl).empty();
 		this._titleEl.innerText = this._title;
+		this.updateLegend();
 	}
 };
 
 firefly.Graph.prototype.updateLegend = function() {
-	if (this.renderer) this.renderer.legend(this._sourcesNormalized);
+	var leftTrim = 0;
+	var rightTrim = 0;
+	if (this._options) {
+		leftTrim = this._options.legend_left_trim;
+		rightTrim = this._options.legend_right_trim;
+	}
+	if (this.renderer) this.renderer.legend(this.getSources(), leftTrim, rightTrim);
 };
 
 firefly.Graph.prototype.updateGraph = function() {
-	if (this.renderer) this.renderer.render(this._sourcesNormalized, this.zoom, this._options);
+	if (this.renderer) this.renderer.render(this.zoom, this._options);
 };
 
 firefly.Graph.prototype.resizeGraph = function() {
 	if (this.renderer) {
 		this.renderer.resize();
-		this.renderer.render(this._sourcesNormalized, this.zoom, this._options);
+		this.renderer.render(this.zoom, this._options);
 	}
 };

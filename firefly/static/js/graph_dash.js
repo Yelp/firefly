@@ -333,7 +333,9 @@ firefly.Dashboard.prototype.setColumnCount = function(columnCount) {
 firefly.DashboardView = function(controller, container) {
 	this.logger_ = goog.debug.Logger.getLogger('firefly.DashboardView');
 
-	this.clipboard_ = null; // a nice little clipboard for duplicating graphs
+	// clipboards for copying entire graphs or just their options
+	this.clipboard_graph_ = null;
+	this.clipboard_options_ = null;
 	this.controller = controller;
 	this.container = container;
 	if (!this.controller.embedded_){
@@ -393,6 +395,11 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 	if (graphEl.length) {
 		graphEl = graphEl.get(0);
 
+		pasteGraphDisabled = instance.clipboard_graph_ ? false : true;
+		if (typeof(Storage) !== "undefined") {
+			pasteGraphDisabled = localStorage.getItem("firefly-clipboard") ? false : true;
+		}
+
 		menuItems.push.apply(menuItems, [
 			{"label": "Graph", "header": true},
 			{"label": "Edit Graph", "action": function() {
@@ -416,17 +423,36 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 				{'label': "1 year", 'action': function() {setZoom($(evt.target).retrieveGraph(), "31536000");}},
 				{'label': "custom", 'action': function() {setZoom($(evt.target).retrieveGraph(), prompt("Zoom in seconds"));}},
 			]},
+			{'label': "Make Zoom Global", 'action': function() {
+				var from = $(evt.target).retrieveGraph();
+				from && $('.graph').each( function() {
+					to = $(this).retrieveGraph();
+					to && to.setZoom(from.zoom);
+				});
+				$(instance.container).trigger('ff:dashchange');
+			}},
 			{"label": "Cut Graph", "action": function() {
 				var graph = $(evt.target).retrieveGraph();
-				instance.clipboard_ = graph.serialize();
+				instance.clipboard_graph_ = graph.serialize();
+				if (typeof(Storage) !== "undefined") {
+					localStorage.setItem("firefly-clipboard", JSON.stringify($(evt.target).retrieveGraph().serialize()));
+				}
 				graph.clear();
 				$(instance.container).trigger('ff:dashchange');
 			}},
 			{"label": "Copy Graph", "action": function() {
-				instance.clipboard_ = $(evt.target).retrieveGraph().serialize();
+				instance.clipboard_graph_ = $(evt.target).retrieveGraph().serialize();
+				if (typeof(Storage) !== "undefined") {
+					localStorage.setItem("firefly-clipboard", JSON.stringify($(evt.target).retrieveGraph().serialize()));
+				}
 			}},
-			{"label": "Paste Graph", "disabled": (instance.clipboard_ ? false : true), "action": function() {
-				$(evt.target).retrieveGraph().sync(instance.clipboard_);
+			{"label": "Paste Graph", "disabled": pasteGraphDisabled, "action": function() {
+				if (typeof(Storage) !== "undefined") {
+					var graph = JSON.parse(localStorage.getItem("firefly-clipboard"));
+					$(evt.target).retrieveGraph().sync(graph);
+				} else {
+					$(evt.target).retrieveGraph().sync(instance.clipboard_graph_);
+				}
 				$(instance.container).trigger('ff:dashchange');
 			}},
 			{"label": "Isolate Graph", "action": function() {
@@ -446,16 +472,18 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 						var loc = $(location).attr('href');
 						var nurl = $.param.querystring(loc, 'embed=true');
 						nurl = $.param.fragment(nurl, '!' + data,2);
-						$('<div></div>')
-						.html('<a href="'+nurl+'">'+nurl+'</a>')
-						.dialog({'title':'Embed url (paste in an iframe to embed)',
-							 'width':400,
-							 'height':50,
-							 'modal':true});
+						var link = 'Set link as iframe src to embed: <a href="'+nurl+'">'+nurl+'</a>'
+						new firefly.GraphModal({'title': 'Embed url', 'content': link});
 					}
 				});
+			}},
+			{"label": "Copy Graph Options", "action": function() {
+				instance.clipboard_options_ = $(evt.target).retrieveGraph().serialize().options;
+			}},
+			{"label": "Paste Graph Options", "disabled": (instance.clipboard_options_ ? false : true), "action": function() {
+				$(evt.target).retrieveGraph().syncOptions(instance.clipboard_options_);
+				$(instance.container).trigger('ff:dashchange');
 			}}
-
 		]);
 
 		menuItems.push.apply(menuItems, [
@@ -499,13 +527,58 @@ firefly.DashboardView.generateContextMenu_ = function(instance, evt) {
 			{'label': "4 Col", 'action': function() {instance.controller.setColumnCount(4);}},
 			{'label': "5 Col", 'action': function() {instance.controller.setColumnCount(5);}}
 		]},
-		{'label': "Make Zoom Global", 'action': function() {
-			var from = $(evt.target).retrieveGraph();
-			from && $('.graph').each( function() {
-				to = $(this).retrieveGraph();
-				to && to.setZoom(from.zoom);
-			});
-			$(instance.container).trigger('ff:dashchange');
+		{'label': "Save to Name", 'action': function() {
+			var footer = $('<div>');
+			var content = $('<div>');
+			var namebox = $('<input>');
+			namebox.attr('type', 'text');
+
+			var incoming = $.deparam.querystring().incoming;
+			if (incoming) {
+				content.append($('<p>').text('You came to this state from a saved graph.  The name is entered below.'));
+				namebox.val(incoming);
+			}
+			else {
+				content.append($('<p>').text('Enter a name to save this graph to.'));
+			}
+
+			content.append(namebox);
+			var flash = $('<div>');
+			content.append(flash);
+
+			var onsave = function() {
+				$.ajax({
+					url: instance.controller.makeURL_('named/' + namebox.val()),
+					type: 'put',
+					async: true,
+					contentType: 'application/json',
+					data: JSON.stringify({'frag': $(location).attr('hash'), 'confirmed': $('.graphmodal button.save').hasClass('confirm')}),
+					success: function(jqXHR) {
+						var namedurl = $(location).attr('protocol') + '//' + $(location).attr('host') + jqXHR;
+						flash.html('<p class="success">This dashboard is: </p>');
+						flash.append($('<a>').attr('href', namedurl).text(namedurl));
+						footer.empty().html('<button rel="modal-close" class="pseudo-link">Close</button>');
+					},
+					error: function(jqXHR) {
+						if (jqXHR.status == 409) {
+							flash.html('<p class="warning">This name is already in use.</p>');
+							$('.graphmodal button.save').text('Confirm Overwrite').addClass('confirm');
+
+						}
+						else {
+							flash.html('<p class="error">Save Failed: </p>');
+							flash.append(jqXHR.responseText);
+						}
+					}});
+			};
+
+			new firefly.GraphModal({'title': 'Save to Name',
+						'content': content,
+						'footer': footer,
+						'actions': [
+							{'name': 'Cancel', 'type': 'close'},
+							{'name': 'Save', 'action': onsave, 'type': 'save'}
+						]});
 		}}
 	]);
 	return menuItems;

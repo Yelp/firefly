@@ -11,10 +11,13 @@ a:focus, button.pseudo-link:focus, button.pseudo-link::-moz-focus-inner {outline
 .dashboard {width:100%; height:100%;border-spacing:0px; table-layout: fixed;}
 #graphs .graph {vertical-align:top;border:1px solid #222;overflow:hidden;}
 #graphs .graph.empty {vertical-align:middle;text-align:center;background-color:transparent;}
+#graphs .graph.empty a {display:block; margin-top: 2em; margin-bottom: 2em;}
+#graphs .graph.empty hr {width: 8px; background-color: #676767; border: 0; height: 1px; }
 
 .graph .graph-content-container {overflow:hidden; position:relative;}
 #graphs .graph h2 {display:none;}
 .graph .graph-title {padding:5px;min-height:1em;}
+.graph .smoothed:after {content:' [smoothed]'; color: #ff3; opacity:0.5;}
 #graphs .graph .graph-title {z-index:0;position:absolute;background-color:rgba(32, 32, 32, 0.6);}
 .graph .actual-graph {line-height:0;}
 
@@ -43,8 +46,17 @@ a:focus, button.pseudo-link:focus, button.pseudo-link::-moz-focus-inner {outline
 .graphedit .graph h2 {display:block;font-size:1.0em;margin-bottom:5px;}
 .graphedit .graph .graph-title-container, .graphedit .graph .graph-region-container {margin-bottom:10px;}
 .graphedit .graph .graph-title {position:static;}
+.graphedit .control {margin-bottom: 3px;}
 .graphedit .controls label:hover {cursor:pointer;color:#0cf;}
 .graphedit .controls span {margin-left:4px;}
+.graphedit .control-group-header { background-color: rgba(0, 0, 0, 0.4); padding: 5px; border: 1px solid #222; border-radius: 3px; cursor: pointer;}
+.graphedit .control-group-header a {display:block;}
+.graphedit .control-group-header:hover { background-color: rgba(35, 35, 35, 0.8); border: 1px solid #333;}
+.graphedit .control-group-header span { background: url('../img/chosen-sprite.png') no-repeat -5px -5px;  width:10px; margin-right: 5px; float: left;}
+.graphedit .control-group-header span.collapsed {background: url('../img/chosen-sprite.png') no-repeat -23px -5px;}
+.graphedit .control-group { background-color: rgba(200, 200, 200, 0.2); margin-top: 0.3em; padding: 5px; border: 1px solid #222; border-radius: 3px;}
+.graphedit .control-group:first-child {margin-top: 0;}
+.graphedit .control-group-body { margin-top: 0.5em; text-indent: 5px;}
 
 .graphedit .source-selector {cursor:move;background-color:rgba(200,200,200,0.2);margin-bottom:5px;padding:5px;border:1px solid #222;border-radius:3px;}
 .graphedit .source-selector:last-of-type {margin-bottom:0;}
@@ -54,6 +66,16 @@ a:focus, button.pseudo-link:focus, button.pseudo-link::-moz-focus-inner {outline
 .graphedit .footer {position:absolute;bottom:10px;right:10px;}
 .graphedit .footer button {padding:10px;margin-left:10px;border:1px solid #222;border-radius:3px;}
 .graphedit .footer button[rel="save-edits"] {background-color:rgba(200,200,200,0.2)}
+
+/** modal dialog **/
+.graphmodal {width:400px; height:250px; background:#222 url(../img/stripez4.png); border-radius:4px; box-shadow:5px 5px 10px #222;}
+.graphmodal .header {height: 20px; border-bottom:1px solid #222; font-size: 1.2em; padding: 2px;}
+.graphmodal .header button[rel="modal-close"] {padding: 3px; margin-right: 1px; float: right;}
+.graphmodal .content {padding: 30px; text-align: center; line-height: 1.1em;}
+.graphmodal .content p {margin-bottom: 10px; margin-top: 10px;}
+.graphmodal .footer {position:absolute; bottom:0px; right:0px; height: 50px; padding: 4px;}
+.graphmodal .footer button {padding:10px;margin-left:10px;border:1px solid #222;border-radius:3px;}
+.graphmodal .footer button[rel="save"] {background-color:rgba(200,200,200,0.2)}
 
 /** context menu **/
 .contextmenu {position: absolute;font-size: 14px;cursor: default;white-space: nowrap;border-radius: 3px;background: #222;border: 1px solid #111;box-shadow: 2px 2px 5px #111;}
@@ -93,3 +115,9 @@ a:focus, button.pseudo-link:focus, button.pseudo-link::-moz-focus-inner {outline
 .ui-dialog-content a:hover {color: #777;}
 
 .data-sources h2 small {vertical-align: 8%;}
+
+
+/** Generic styles **/
+.error {color: #f33; opacity 0.7;}
+.warning {color: #aa3; opacity 0.7;}
+.success {color: #7a5; opacity: 0.7;}

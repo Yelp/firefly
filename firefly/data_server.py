@@ -1,28 +1,37 @@
 from __future__ import with_statement
 
-import datetime
-import hashlib
-import logging
 import os
 import re
-import signal
-import simplejson as json
-import socket
-import sqlite3
 import sys
 import time
-import util
+import signal
+import socket
+import sqlite3
+import hashlib
+import logging
+import datetime
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
 
 import yaml
+import tornado.web
+import tornado.ioloop
 import tornado.httpclient
 import tornado.httpserver
-import tornado.ioloop
-import tornado.web
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+import util
+
 log = logging.getLogger('firefly_data_server')
 
 DEFAULT_DATA_SERVER_PORT = 8890
+
+# The number of annotations to draw before we stop
+# This cut-off exists because browsers are unhappy with a lot of these
+ANNOTATIONS_CUT_OFF = 300
 
 def token_authed(method):
     def new_method(self):
@@ -49,11 +58,13 @@ class SourcesHandler(tornado.web.RequestHandler):
         self.write(json.dumps(contents))
 
     def _list_sourcelists(self):
+        data_sources = self.application.settings['data_sources']
+
         sourcelists = [{
             'name': src._FF_KEY,
             'type': 'data_source',
             'desc': src.DESC,
-            'children': None} for src in self.application.settings['data_sources']]
+            'children': None} for src in data_sources if not src.ui_exclude]
         return sourcelists
 
 
@@ -147,7 +158,8 @@ class AnnotationsHandler(GraphBaseHandler):
 
         cursor = self.settings["db"].cursor()
 
-        annotations_rows = cursor.execute('SELECT type, description, time, id FROM annotations WHERE time >= ? and time <= ?', (params['start'], params['end']))
+        annotations_rows = cursor.execute('SELECT type, description, time, id FROM annotations WHERE time >= ? and time <= ? ORDER BY time DESC LIMIT ?',
+                                          (params['start'], params['end'], ANNOTATIONS_CUT_OFF))
 
         self.set_header('Content-Type', 'application/json')
         self.set_header("Cache-Control", "no-cache, must-revalidate")
@@ -205,10 +217,8 @@ def parse_sources(sources, data_sources_by_key):
     srcs = [source[1:] for source in sources]
     return ds, srcs
 
-def initialize_data_server(config, secret_key=None, ioloop=None):
-    if ioloop is None:
-        ioloop = tornado.ioloop.IOLoop.instance()
 
+def initialize_data_server(config, secret_key=None):
     # connect to the database to store annotation in
     # I kind of hate having the schema for this DB here, but I'm going to leave it for to retain parity with ui_server.py
     db_conn = sqlite3.connect(config['db_file'], isolation_level=None)
@@ -235,7 +245,8 @@ def initialize_data_server(config, secret_key=None, ioloop=None):
         (r"/sources", SourcesHandler)], **config)
 
     # start the main server
-    http_server = tornado.httpserver.HTTPServer(application, io_loop=ioloop)
-    http_server.listen(config["port"])
+    http_server = tornado.httpserver.HTTPServer(application)
+    http_server.bind(config["port"])
+    http_server.start(0)
 
     log.info('Firefly data server started on port %d' % config["port"])

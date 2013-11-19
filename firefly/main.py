@@ -14,7 +14,6 @@ Configuration precedence works as follows:
 """
 
 from collections import defaultdict
-import hashlib
 import logging
 from optparse import OptionGroup, OptionParser
 import os
@@ -28,12 +27,16 @@ import yaml
 from firefly.data_server import initialize_data_server
 from firefly.ui_server import initialize_ui_server
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log = logging.getLogger('firefly')
+
 
 def load_config_from_file(config_file):
     with open(config_file, 'r') as f:
-        config = yaml.load(f)
+        try:
+            config = yaml.safe_load(f)
+        except yaml.scanner.ScannerError:
+            log.error('Invalid yaml in config file %s' % config_file)
+            sys.exit(1)
     return config
 
 if __name__ == "__main__":
@@ -64,6 +67,10 @@ Runs in test mode:
         dest='config_file',
         default=None,
         help="Specify a configuration file to read from.")
+    parser.add_option('--loggingconf',
+        dest='loggingconf',
+        default=None,
+        help="Specify a configuration file for logging.")
     parser.add_option('--testing',
         dest='testing',
         action='store_true',
@@ -144,6 +151,11 @@ Runs in test mode:
     config["testing"] = options.testing
     config["data_server"]["data_sources_by_key"] = {}
 
+    # setup logging in a configurable manner
+    if options.loggingconf:
+        config["loggingconf"] = options.loggingconf
+    util.setup_logging(config)
+
     if options.config_file is None:
         config["config_file"] = "firefly.yaml"
     else:
@@ -177,8 +189,8 @@ Runs in test mode:
     def get_ds_instance(ds):
         ds_class = util.import_module_class(ds)
         ds_kwargs = config['data_server']['data_source_config'].get(ds, {})
-        ds_instance = ds_class(**ds_kwargs) # args only used by StatMonsterRRD atm
-        key = hashlib.sha1(ds).hexdigest()[:6]
+        ds_instance = ds_class(**ds_kwargs)  # args only used by StatMonsterRRD atm
+        key = util.generate_ds_key(ds)
         ds_instance._FF_KEY = key
         config['data_server']['data_sources_by_key'][key] = ds_instance
         return ds_instance
@@ -190,13 +202,45 @@ Runs in test mode:
 
     config["data_server"]["data_sources"] = data_sources
 
+    if "secret_key" not in config.keys():
+        log.error("No Secret Key Provided: Exiting")
+        sys.exit(1)
+
     if not options.omit_data_server:
         # Allow the data server to initialize itself and attach itself to the IOLoop
-        initialize_data_server(config["data_server"], secret_key=config["secret_key"], ioloop=tornado.ioloop.IOLoop.instance())
+        try:
+            initialize_data_server(config["data_server"], secret_key=config["secret_key"])
+        except socket.error as exc:
+            log.error('Problem starting data server: %s' % str(exc))
+            sys.exit(1)
 
     if not options.omit_ui_server:
         # Allow the UI server to initialize itself and attach itself to the IOLoop
-        initialize_ui_server(config["ui_server"], secret_key=config["secret_key"], ioloop=tornado.ioloop.IOLoop.instance())
+        try:
+            initialize_ui_server(config["ui_server"], secret_key=config["secret_key"])
+        except socket.error as exc:
+            # The following hack is unfortunate, but necessary.
+            # When Tornado forks, its does the right thing when an HTTP server
+            # is configured to have as many workers as procs that gets forked.
+            # However, if another HTTPServer is on the IOLoop, it will fail to
+            # bind to the right address somewhere in the process.
+            # This is OK, because the predecessor procs will live on and serve
+            # traffic correctly.
+            # This has the unfortunate side-effect of masking instances in
+            # development when users accidentally try to start multiple
+            # instances of Firefly running. The following warning message is
+            # intended to provide a hint for this case in development, and can
+            # be safely ignored in production.
+            if "Address already in use" in str(exc):
+                log.warning("UI server socket not bound: %s. This is probably due to multi-processing and can safely be ignored." % str(exc))
+                pass
+            else:
+                log.error('Problem starting ui server: %s' % str(exc))
+                sys.exit(1)
 
-    # Kick everything off
-    tornado.ioloop.IOLoop.instance().start()
+    try:
+        # Kick everything off
+        tornado.ioloop.IOLoop.instance().start()
+    except KeyboardInterrupt:
+        sys.stderr.write('\nExiting on CTRL-c\n')
+        sys.exit(0)

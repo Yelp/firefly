@@ -2,14 +2,15 @@ goog.provide("firefly.Renderer");
 
 goog.require('goog.debug.Logger');
 
+var RIGHT_ARROW = '&rarr;&#8203;';
 
 /**
  * @constructor
  */
-firefly.Renderer = function(graph, makeURL, dataServer, container, titleEl, legendEl, containerHeight) {
+firefly.Renderer = function(graph, makeURL, container, titleEl, legendEl, containerHeight) {
 	this.makeURL_ = makeURL;
 	this.graph_ = graph;
-	this.dataServer = dataServer;
+	this.sources = graph.getSources();
 	this.container = container;
 	this.legendEl = legendEl;
 	this.titleEl = titleEl;
@@ -73,9 +74,20 @@ firefly.Renderer.prototype._createSVG = function() {
 	// check for null data
 	checkDiscontinuous = function(d) {return d.y !== null;}
 
+	// custom interpolator for single points
+	interpol = function(points) {
+		//This is a simple linear interpolator except when there are isolated points.
+		//When this is the case, we draw a short "line" 0.2 px to the side of the original
+		//in order to form a point.  This allows for drawing something like a scatter plot.
+		if (points.length == 1) {
+			points.push([points[0][0] + 0.7, points[0][1]]);
+		}
+		return points.join("L");
+	}
+
 	// helpers for drawing our lines/areas
-	this.line = d3.svg.line().defined(checkDiscontinuous).interpolate("linear"); // use our custom interpolation for lines
-	this.previousLine = d3.svg.line().defined(checkDiscontinuous).interpolate("linear");
+	this.line = d3.svg.line().defined(checkDiscontinuous).interpolate(interpol); // use our custom interpolation for lines
+	this.previousLine = d3.svg.line().defined(checkDiscontinuous).interpolate(interpol);
 	this.area = d3.svg.area().interpolate("linear"); // and linear interpolation for areas
 
 	// interpolator to figure out an index-to-color mapping
@@ -210,7 +222,17 @@ firefly.Renderer.prototype.positionGuide = function() {
 	// tooltip: position it by the mouse
 	d3.select(this.tooltip_)
 		.style('top', mouseCoords[1] + 'px')
-		.style('left', mouseCoords[0] + 20 + 'px');
+		.style('left', function() {
+			var thisw = $(this).width();
+			if (mouseCoords[0] + thisw > renderer.width) {
+				// Move the tooltip to the left of the cursor with a 20px buffer
+				return (mouseCoords[0] - thisw - 20) + 'px';
+			}
+			else {
+				// Leave the tooltip on the right of the cursor with a 20px buffer
+				return (mouseCoords[0] + 20) + 'px';
+			}
+		});
 };
 
 
@@ -276,6 +298,7 @@ firefly.Renderer.prototype.getDataCoords_ = function(layers, axes, timeAtMouseX)
 		}
 		else {
 			yVal = 'undef';
+			dotX = dotY = -20; // Move display off of the graph
 		}
 		dataPoints.push({
 			'dotX': dotX,
@@ -338,15 +361,14 @@ firefly.Renderer.prototype.resize = function() {
 };
 
 
-firefly.Renderer.prototype.render = function (sources, zoom, options) {
+firefly.Renderer.prototype.render = function (zoom, options) {
 	options = options || {};
 	zoom = parseInt(zoom);
 	// tell our worker to retrieve and process the data
 	this.worker.postMessage({
-		"sources"    : sources,
+		"sources"    : this.sources,
 		"zoom"       : zoom,
 		"options"    : options,
-		"dataServer" : this.dataServer,
 		"width"      : this.width,
 		"token"      : this.graph_.sourcerer.getToken()
 	});
@@ -394,10 +416,6 @@ firefly.Renderer.prototype._redraw = function (data) {
 			.append("div")
 				.attr('class', 'annotation-tooltip')
 				.attr('data-id', function(d){ return d.id; })
-			.append("table")
-			.append("tbody")
-			.append("td")
-				.attr('class', 'annotation-tooltip-value')
 				.attr('title', function(d){ return d.description; });
 		annotation_tooltips.exit().remove();
 	}
@@ -535,6 +553,10 @@ firefly.Renderer.prototype._redraw = function (data) {
 		this.hideGuide();
 	}
 	this.hasAnnotations = !!(data.annotations.length);
+
+	if (data.options.smooth) {
+		$(this.titleEl).addClass('smoothed');
+	}
 };
 
 
@@ -610,14 +632,12 @@ firefly.Renderer.prototype.drawAnnotations = function(div, data){
 		.attr("x1", function(d){ return renderer.xScale(d.time); })
 		.attr("x2", function(d){ return renderer.xScale(d.time); });
 
-	div.selectAll(".annotation-tooltip-value")
+	div.selectAll(".annotation-tooltip")
 		.text(function(d){
 			var label = d.type;
 			if (data.options.short_annotations) label = label.substring(0,1);
 			return label;
 		})
-
-	div.selectAll(".annotation-tooltip")
 		.style('top', function(d) { return (renderer._pickAnnotationToolTipLocation(d, this, data)[1]) + 'px'; })
 		.style('left', function(d) { return (renderer._pickAnnotationToolTipLocation(d, this, data)[0]) + 'px'; });
 };
@@ -795,10 +815,126 @@ firefly.Renderer.prototype._linearTickFormat = function(domain, count) {
 	}
 };
 
-firefly.Renderer.prototype.legend = function(sources) {
-	this.legendXHR && this.legendXHR.abort();
-	this.legendXHR = $.ajax({
-		url: this.dataServer + '/legend',
+firefly.Renderer.prototype._buildDataServerToSourcesMap = function(sources) {
+	var dataServerToSources = {};
+
+	$.each(sources, function(source_idx, source) {
+		dataServerToSources[source[0]] = dataServerToSources[source[0]] || [];
+		dataServerToSources[source[0]].push(source.slice(1));
+	});
+
+	return dataServerToSources;
+};
+
+firefly.Renderer.prototype._buildDataServerToSourcePositionMap = function(sources) {
+	var result = {};
+
+	$.each(sources, function(source_idx, source) {
+		result[source[0]] = result[source[0]] || [];
+		result[source[0]].push(source_idx);
+	});
+
+	return result;
+};
+
+firefly.Renderer.prototype.legend = function(sources, leftTrim, rightTrim) {
+	var titleString = $(this.titleEl).html();
+	var titleElements;
+	var numTitleElements;
+
+	// If leftTrim or rightTrim aren't specified or are not ints, we'll just
+	// set them to zero.
+	if (!leftTrim) {
+		leftTrim = 0;
+	}
+	if (!rightTrim) {
+		rightTrim = 0;
+	}
+
+	if (this.titleElements) {
+		titleElements = this.titleElements;
+		numTitleElements = titleElements.length || 0;
+	} else {
+		titleElements = [];
+		numTitleElements = 0;
+	}
+
+	if (numTitleElements === 1 && titleElements[0] === titleString) {
+		numTitleElements = 0;
+	}
+
+
+	var that = this;
+	var ul = $("<ul>");
+
+	var multipleDataServers = this.uniqueSources(sources).length > 1;
+
+	$.each(sources, function(i, source) {
+		// Provides some small functionality for trimming items off the
+		// left or right side of the legend
+		var sliceStart = 2 + numTitleElements + leftTrim;
+		var sliceEnd = source.length - rightTrim;
+
+		// Too much trimming; we'll just assume the user wanted an empty display
+		// (minus the data server if necessary)
+		if (sliceStart >= sliceEnd) {
+			sliceStart = source.length;
+			sliceEnd = source.length;
+		}
+
+		var dataServerDesc = that._dsDescFromSourcerer(source[0]);
+		var li = $("<li>").appendTo(ul);
+		var div = $("<div>").addClass("color").appendTo(li);
+
+		var displayedSourceComponents = source.slice(sliceStart, sliceEnd);
+		if (multipleDataServers)
+			displayedSourceComponents.unshift(dataServerDesc);
+
+		$(div).css("background-color", that.hsl(i / sources.length));
+		$("<span>").html(displayedSourceComponents.join(RIGHT_ARROW)).appendTo(li);
+	});
+	$(this.legendEl).empty().append(ul);
+	this.resize();
+};
+
+firefly.Renderer.prototype.uniqueSources = function(sources) {
+	return $.map(sources, function(x) { return x[0]; }).reduce(function(prev, cur) {
+		if (prev.indexOf(cur) === -1)
+			prev.push(cur);
+		return prev;
+	}, []);
+};
+
+firefly.Renderer.prototype.arrayLongestCommonPrefix = function(array1, array2) {
+	var i;
+	var result = [];
+	for (i = 0; i < array1.length; i++) {
+		var side1 = array1[i];
+		var side2 = array2[i];
+		if (side1 && side2 && side1 === side2) {
+			result.push(side1);
+		} else {
+			break;
+		}
+	}
+	return result;
+};
+
+/**
+ * Gets the description of the data server at dataServerURL from the graph's
+ * Sourcerer object.
+ */
+firefly.Renderer.prototype._dsDescFromSourcerer = function(dataServerURL) {
+	var matchingSources = $.grep(this.graph_.sourcerer._sources.children, function(source) {
+		return source.name === dataServerURL;
+	});
+	if (!matchingSources[0]) return "?";
+	return matchingSources[0].desc;
+};
+
+firefly.Renderer.prototype.sendTitleXHR = function(dataServer, sources) {
+	return $.ajax({
+		url: dataServer + '/title',
 		dataType: 'json',
 		data: {
 			'sources': JSON.stringify(sources),
@@ -806,35 +942,36 @@ firefly.Renderer.prototype.legend = function(sources) {
 		},
 		context: this,
 		success: function(data) {
-			var that = this;
-			var ul = $("<ul>");
+			this.collectedTitles[dataServer] = data['title'];
+			if (Object.keys(this.titleXHRs).length !== Object.keys(this.collectedTitles).length) return;
 
-			$.each(data['legend'], function(i, source) {
-				var li = $("<li>").appendTo(ul);
-				var div = $("<div>").addClass("color").appendTo(li);
+			var newTitle = $.map(this.collectedTitles, function(title, ds) { return [title]; });
+			newTitle = newTitle.reduce(this.arrayLongestCommonPrefix);
 
-				$(div).css("background-color", that.hsl(i / sources.length));
-				$("<span>").html( source[0].join('&rarr;&#8203;') ).appendTo(li);
-			});
+			$(this.titleEl).html( newTitle.join(RIGHT_ARROW));
+			this.titleElements = newTitle;
 
-			$(this.legendEl).empty().append(ul);
-			this.resize();
+			// The graph title is linked to the legend, so we can only compute
+			// the legend when we have a title.
+			this.graph_.updateLegend();
 		}
 	});
 };
 
 firefly.Renderer.prototype.title = function(sources) {
-	this.titleXHR && this.titleXHR.abort();
-	this.titleXHR = $.ajax({
-		url: this.dataServer + '/title',
-		dataType: 'json',
-		data: {
-			'sources': JSON.stringify(sources),
-			'token'  : this.graph_.sourcerer.getToken()
-		},
-		context: this,
-		success: function(data) {
-			$(this.titleEl).html( data['title'].join('&rarr;&#8203;') );
-		}
-	});
+	if (this.titleXHRs) {
+		$.each(this.titleXHRs, function (idx, xhr) {
+			xhr.abort();
+		});
+	}
+	this.titleXHRs = {};
+	this.collectedTitles = {};
+
+	var dataServerToSources = this._buildDataServerToSourcesMap(sources);
+	var dataServer;
+
+	for (dataServer in dataServerToSources) {
+		var requestSources = dataServerToSources[dataServer];
+		this.titleXHRs[dataServer] = this.sendTitleXHR(dataServer, requestSources);
+	}
 };

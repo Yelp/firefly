@@ -65,30 +65,30 @@ firefly.GraphEdit.prototype.logger_ = null;
  * observe events on children of the edit pane
  */
 firefly.GraphEdit.prototype.observeEvents = function() {
-	var that = this;
+	var graphEdit = this;
 
 	$(document).bind("keydown", function(evt) {
 		// listen for the esc key, close without saving
-		if (evt.which == 27) that.close(false);
+		if (evt.which == 27) graphEdit.close(false);
 	});
 
 	$(this._container).delegate('[rel=cancel-edits]', 'click', function(evt) {
 		// close without saving the graph
-		that.close(false);
+		graphEdit.close(false);
 	});
 
 	$(this._container).delegate('[rel=save-edits]', 'click', function(evt) {
 		// close and save the graph
-		that.close(true);
+		graphEdit.close(true);
 	});
 
 	$(this._container).delegate('[rel=dir] span', 'click', function(evt) {
 		var target = $(evt.target).parent().get(0);
 		if ($(target).attr('rel') == 'dir') {
 			if ($(target).hasClass('open')) {
-				that.closeGraphDir(target);
+				graphEdit.closeGraphDir(target);
 			} else {
-				that.openGraphDir(target);
+				graphEdit.openGraphDir(target);
 			}
 		}
 	});
@@ -98,29 +98,42 @@ firefly.GraphEdit.prototype.observeEvents = function() {
 		var idx = $(".source-selector").filter(function() {
 			return $(this).data('ff:selected-source');
 		}).index(this);
-		that.graph.addSource(key, idx);
+		graphEdit.graph.addSource(key, idx);
 	});
 	$(this._container).delegate(".source-selector", "ff:remove-source", function(evt, key) {
 		var idx = $(".source-selector").filter(function() {
 			return $(this).data('ff:selected-source');
 		}).index(this);
-		that.graph.removeSource(idx);
+		graphEdit.graph.removeSource(idx);
 	});
 
-	/** events for managing the source selectors themselves **/
+	// handle the "add" button to add a new, blank SourceSelector
 	$(this._container).delegate('[rel=add-source-selector-below]', 'click', function(evt) {
 		var next = $(this).closest('.source-selector').next('.source-selector');
-		that.addSourceSelector(null, next.length ? next.get(0) : null);
+		graphEdit.addSourceSelector(null, next.length ? next.get(0) : null);
 	});
+
+	// handle the "clone" button to clone this SourceSelector
 	$(this._container).delegate('[rel=clone-source-selector-below]', 'click', function(evt) {
 		var ss = $(this).closest('.source-selector').get(0);
 		var next = $(ss).next('.source-selector');
 		var currentSrc = $(ss).data('ff:selected-source');
-		var newss = that.addSourceSelector(currentSrc, next.length ? next.get(0) : null);
+		var newss = graphEdit.addSourceSelector(currentSrc, next.length ? next.get(0) : null);
 		currentSrc && $(newss).trigger('ff:add-source', [currentSrc]);
 	});
+
+	// handle the "remove" button - if we're removing the last SourceSelector, create a new one
 	$(this._container).delegate('[rel=remove-source-selector]', 'click', function(evt) {
-		that.addSourceSelector(null, $(this).closest('.source-selector').get(0));
+		// for some reason, this query finds the "current" .source-selector, even though
+		// it should have been removed already by the SourceSelector itself while getting
+		// a first crack at handling this event.
+		var parent = $(this).closest('.source-selector').get(0);
+		var otherSelectors = $(graphEdit._container).find('.source-selector').filter(function(idx) {
+			return (this !== parent);
+		});
+		if (otherSelectors.length === 0) {
+			graphEdit.addSourceSelector();
+		}
 	});
 };
 
@@ -142,7 +155,7 @@ firefly.GraphEdit.prototype.close = function(save) {
 firefly.GraphEdit._domTemplate = $([
 	"<div class='graphedit'>",
 		"<div class='pane data-sources'>",
-			"<h2>Data Sources <small>(only <b>one</b> datacenter supported per graph)</small></h2>",
+			"<h2>Data Sources</h2>",
 			"<div></div>",
 		"</div>",
 		"<div class='pane temp-graph'>",
@@ -230,9 +243,6 @@ firefly.GraphEdit.prototype.valueParsers = {
 
 firefly.GraphEdit.prototype.controls = [
 	{'label': "Graph Options", 'groups': [
-		{'name': 'y_axis_log_scale', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
-			{'value': '1', 'label': 'Log-Scale Y Axis'}
-		]},
 		{'name': 'overlay_previous_period', 'inputType': 'radio', 'valueType': 'integer', 'items': [
 			{'value': undefined, 'label': 'Historical Overlay: None'},
 			{'value': 1, 'label': 'Historical Overlay: Previous Period'},
@@ -245,14 +255,37 @@ firefly.GraphEdit.prototype.controls = [
 		{'name': 'area_graph', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Area Graph'}
 		]},
+	]},
+	{'label': "Legend Options", 'groups': [
+		{'name': 'legend_left_trim', 'inputType': 'number', 'valueType': 'integer', 'items': [
+			{'value': undefined, 'label': "Left trim items"}
+		]},
+		{'name': 'legend_right_trim', 'inputType': 'number', 'valueType': 'integer', 'items': [
+			{'value': undefined, 'label': "Right trim items"}
+		]},
+	]},
+	{'label': "Annotations Options", 'groups': [
 		{'name': 'show_annotations', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Show Annotations'},
 		]},
 		{'name': 'short_annotations', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
 			{'value': '1', 'label': 'Short Annotations'},
 		]},
+	]},
+	{'label': 'Axis Options', 'groups': [
+		{'name': 'y_axis_log_scale', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
+			{'value': '1', 'label': 'Log-Scale Y Axis'}
+		]},
 		{'name': 'y_axis_clamp', 'inputType': 'number', 'valueType': 'float', 'items': [
 			{'value': undefined, 'label': 'Y Axis Clamp'},
+		]},
+	]},
+	{'label': 'Smoothing Options', 'groups': [
+		{'name': 'smooth', 'inputType': 'checkbox', 'valueType': 'boolean', 'items': [
+			{'value': '1', 'label': 'Smoothing'},
+		]},
+		{'name': 'smooth_alpha', 'inputType': 'range', 'valueType': 'float', 'items': [
+			{'value': '200', 'min': '100', 'max': '400', 'label': 'Smoothing Amount'},
 		]}
 	]}
 ];
@@ -260,11 +293,23 @@ firefly.GraphEdit.prototype.controls = [
 firefly.GraphEdit.prototype.getControls = function(graphOptions) {
 	var frag = $('<div>');
 	$.each(this.controls, function(i, section) {
-		$('<h3>').text(section.label).appendTo(frag);
+		var headerAndBodyDiv = $('<div>').addClass('control-group');
+		headerAndBodyDiv.appendTo(frag);
+		var header = $('<h3>').addClass("control-group-header");
+		// \xa0 is a space (&nbsp;). You can't have jQuery insert "&nbsp;"
+		// because it will try to escape it, but we want to render blank
+		// space so the background image (the arrow) will show through.
+		// As a result, we're stuck inserting this funky dude
+		var headerIcon = $('<span>').text('\xa0');
+		header.append($('<a>').append(headerIcon).append(section.label));
+		header.appendTo(headerAndBodyDiv);
+		var sectionDiv = $('<div>').addClass('control-group-body');
+		sectionDiv.appendTo(headerAndBodyDiv);
 		$.each(section.groups, function(j, group) {
-			var groupDiv = $('<div>').appendTo(frag);
+			var groupDiv = $('<div>').appendTo(sectionDiv);
 			$.each(group.items, function(k, item) {
-				var itemDiv = $('<div>').appendTo(groupDiv)
+				var itemDiv = $('<div>').appendTo(groupDiv);
+				itemDiv.addClass('control');
 				var label = $('<label>').appendTo(itemDiv);
 				var input = $('<input>').attr({'type': group.inputType, 'name': group.name, 'value': item.value}).appendTo(label);
 				input.data('valueType', group.valueType);
@@ -295,9 +340,19 @@ firefly.GraphEdit.prototype.getControls = function(graphOptions) {
 					}
 				} else if (group.inputType == 'number') {
 					input.prop('value', graphOptions[group.name])
+				} else if (group.inputType == 'range') {
+					input.attr({'min': item.min, 'max': item.max, 'value': graphOptions[group.name]});
 				}
 			});
 		});
+	});
+
+	$(frag).find(".control-group-header").click(function() {
+		// 375 is the number of milliseconds to spend sliding
+		// empirically determined for "feel"
+		$(this).next().slideToggle(375);
+		$(this).find("span").toggleClass("collapsed");
+		return false;
 	});
 
 	return frag;

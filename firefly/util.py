@@ -1,8 +1,10 @@
 import hashlib
 import hmac
 import logging
+import logging.config
 import re
 import time
+import sys
 from sys import modules
 
 last_dot_splitter_re = re.compile("((.*)\.)?([^\.]+)")
@@ -37,15 +39,12 @@ def import_module(dotted_path):
             raise AttributeError("Module %r has no attribute %r" % (mod, name))
     return mod
 
-def setup_logging(logger_name):
-    """Sets up logging to stdout for a service script."""
-    log = logging.getLogger(logger_name)
-    log.setLevel(logging.INFO)
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.INFO)
-    handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    log.addHandler(handler)
-    return log
+def setup_logging(config):
+    """Sets up logging to arbitrary loggers"""
+    if config.get("loggingconf"):
+        logging.config.fileConfig(config["loggingconf"], disable_existing_loggers=0)
+    else:
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 def verify_access_token(token, key):
     """Verify that the given access token is still valid. Returns true if it is,
@@ -62,6 +61,9 @@ def generate_access_token(key, duration=60):
     t = '%015d' % int(time.time() + duration)
     signature = hmac.new(key, msg=t, digestmod=hashlib.sha1).hexdigest()
     return t + signature
+
+def generate_ds_key(ds):
+    return hashlib.sha1(ds).hexdigest()[:6]
 
 # Base58 is the encoding used by bit.ly, flickr, etc. to identify short URLs
 # It's Base62 [a-zA-Z0-9] minus chars that can be confused when transcribed by hand
