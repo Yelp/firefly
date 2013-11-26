@@ -218,7 +218,9 @@ def parse_sources(sources, data_sources_by_key):
     return ds, srcs
 
 
-def initialize_data_server(config, secret_key=None):
+def initialize_data_server(config_global, secret_key=None):
+    config = config_global["data_server"]
+
     # connect to the database to store annotation in
     # I kind of hate having the schema for this DB here, but I'm going to leave it for to retain parity with ui_server.py
     db_conn = sqlite3.connect(config['db_file'], isolation_level=None)
@@ -248,5 +250,8 @@ def initialize_data_server(config, secret_key=None):
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.bind(config["port"])
     http_server.start(0)
+
+    # setup logging
+    util.setup_logging(config_global)
 
     log.info('Firefly data server started on port %d' % config["port"])

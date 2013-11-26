@@ -152,7 +152,8 @@ class DashboardListHandler(tornado.web.RequestHandler):
         self.render("templates/list_dashboards.html", **env)
 
 
-def initialize_ui_server(config, secret_key=None):
+def initialize_ui_server(config_global, secret_key=None):
+    config = config_global["ui_server"]
 
     # connect to the database
     conn = sqlite3.connect(config['db_file'], isolation_level=None)
@@ -182,5 +183,8 @@ def initialize_ui_server(config, secret_key=None):
     # start the main server
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(config["port"])
+
+    # setup logging
+    util.setup_logging(config_global)
 
     log.info('Firefly UI server started on port %d' % config["port"])
