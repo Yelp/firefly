@@ -154,6 +154,7 @@ Runs in test mode:
     # setup logging in a configurable manner
     if options.loggingconf:
         config["loggingconf"] = options.loggingconf
+    util.setup_logging(config)
 
     if options.config_file is None:
         config["config_file"] = "firefly.yaml"
