@@ -3,3 +3,4 @@
 *.sqlite
 *.yaml
 !config.yaml.example
+.idea
