@@ -7,6 +7,7 @@ requirements = [
     "pyyaml >= 3.09",
     "tornado >= 1.1, <2.0",
     "testify == 0.3.10",
+    "PyHamcrest >= 1.8",
 ]
 
 # python-rrdtool doesn't install cleanly out of the box on OS X
