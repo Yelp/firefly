@@ -1,6 +1,5 @@
 import colorsys
 from datetime import datetime
-import urllib2
 from urllib2 import urlopen
 from urlparse import urljoin
 
@@ -23,7 +22,6 @@ class GraphiteHTTP(firefly.data_source.DataSource):
     def __init__(self, *args, **kwargs):
         super(GraphiteHTTP, self).__init__(*args, **kwargs)
         self.graphite_url = kwargs['graphite_url']
-        self.logger.warn('GraphiteHTTP reloaded!')
 
     def list_path(self, path):
         """
@@ -86,7 +84,6 @@ class GraphiteHTTP(firefly.data_source.DataSource):
         :param width: ignored
         :return: json string
         """
-        self.logger.warn('sources %s  start %s  end %s  width %s' % (sources, start, end, width))
         # Unfortunately, the most granular unit of time that graphite supports via this API is minute.
         fmt = '%H:%M_%Y%m%d'
         from_str = datetime.fromtimestamp(start).strftime(fmt)
@@ -103,9 +100,7 @@ class GraphiteHTTP(firefly.data_source.DataSource):
                 'until': until_str,
             }
             render_url = urljoin(self.graphite_url, 'render/?%s' % '&'.join(['%s=%s' % (k,v) for k,v in params.items()]))
-            self.logger.warn('render_url %s' % render_url)
             render_json = urlopen(render_url).read()
-            self.logger.warn('render_json %s' % render_json)
             render_results = json.loads(render_json)
 
             for result in render_results:
@@ -117,8 +112,7 @@ class GraphiteHTTP(firefly.data_source.DataSource):
                     }
                     output.append(output_datapoint)
 
-        output_str = json.dumps(output) # , indent=2)
-        return output_str
+        return json.dumps(output)
 
     def legend(self, sources):
         return self._svc(sources)
