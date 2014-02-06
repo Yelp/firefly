@@ -15,7 +15,7 @@ if not (os.name == "posix" and platform.system() == "Darwin"):
 
 setup(
     name='firefly',
-    version='1.0',
+    version='1.1.0',
     provides=['firefly'],
     author='Yelp',
     description='A multi-datacenter graphing tool',
