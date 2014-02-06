@@ -209,7 +209,7 @@ Runs in test mode:
     if not options.omit_data_server:
         # Allow the data server to initialize itself and attach itself to the IOLoop
         try:
-            initialize_data_server(config["data_server"], secret_key=config["secret_key"])
+            initialize_data_server(config, secret_key=config["secret_key"])
         except socket.error as exc:
             log.error('Problem starting data server: %s' % str(exc))
             sys.exit(1)
@@ -217,7 +217,7 @@ Runs in test mode:
     if not options.omit_ui_server:
         # Allow the UI server to initialize itself and attach itself to the IOLoop
         try:
-            initialize_ui_server(config["ui_server"], secret_key=config["secret_key"])
+            initialize_ui_server(config, secret_key=config["secret_key"])
         except socket.error as exc:
             # The following hack is unfortunate, but necessary.
             # When Tornado forks, its does the right thing when an HTTP server
