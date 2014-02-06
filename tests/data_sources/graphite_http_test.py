@@ -141,7 +141,6 @@ class GraphiteHTTPTest(T.TestCase):
 
             result_list = json.loads(result_json)
             T.assert_equal(4, len(result_list))
-            print result_list
 
             for i,expected_result in enumerate(expected_results):
                 T.assert_dicts_equal(expected_result, result_list[i])

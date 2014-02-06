@@ -28,6 +28,23 @@ class GraphiteHTTP(firefly.data_source.DataSource):
         Given a graphite metric name split up into it's segments,
         return a list of the next possible segments.
 
+        Sample input entry from graphite:
+        {
+            "leaf": 0,
+            "context": {},
+            "text": "activemq",
+            "expandable": 1,
+            "id": "activemq",
+            "allowChildren": 1
+        }
+
+        Sample output entry to firely:
+        {
+            'type': 'dir',
+            'name': name,
+            'children': None
+        }
+
         :param path: list of path components as strings
         :return: list of dicts containing the path entries
         """
@@ -39,22 +56,6 @@ class GraphiteHTTP(firefly.data_source.DataSource):
         find_json = urlopen(find_url).read()
         find_results = json.loads(find_json)
 
-        # Sample input entry from graphite:
-        # {
-        #     "leaf": 0,
-        #     "context": {},
-        #     "text": "activemq",
-        #     "expandable": 1,
-        #     "id": "activemq",
-        #     "allowChildren": 1
-        # }
-
-        # Sample output entry to firely:
-        # {
-        #     'type': 'dir',
-        #     'name': name,
-        #     'children': None
-        # }
         contents = list()
         for result in sorted(find_results, key=lambda result: result['text']):
             if result['leaf'] == 0:
@@ -70,11 +71,6 @@ class GraphiteHTTP(firefly.data_source.DataSource):
 
     def _form_entries_from_file(self, name):
         return [{'type': 'file', 'name': name}]
-
-    def _svc(self, sources):
-        colorstep = 1.0 / len(sources)
-        svc = zip(sources, ("#%s" % ("%02x%02x%02x" % colorsys.hsv_to_rgb(i*colorstep, 1, 255)) for i in xrange(len(sources))))
-        return svc
 
     def data(self, sources, start, end, width):
         """
