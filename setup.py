@@ -2,6 +2,8 @@ import os
 import platform
 from setuptools import find_packages
 from setuptools import setup
+import subprocess
+import sys
 
 requirements = [
     "pycurl",
@@ -17,9 +19,20 @@ requirements = [
 #if not (os.name == "posix" and platform.system() == "Darwin"):
 #    requirements.append("python-rrdtool >= 1.4.7")
 
+# If you know a better way to get the submodules pulled down to the filesystem
+# before 'setup.py sdist' gets called, I'm all ears. This is necessary so that
+# the static assets in the submodules are included in the distribution
+# when built by Jenkins.
+if 'sdist' in sys.argv or 'bdist_wheel' in sys.argv:
+    try:
+        subprocess.check_call(['make', 'production'])
+    except subprocess.CalledProcessError, cpe:
+        sys.stderr.write("Attempt to 'make production' failed with exit code %s" % cpe.returncode)
+        sys.exit(1)
+
 setup(
     name='firefly',
-    version='1.1.1',
+    version='1.1.2',
     provides=['firefly'],
     author='Yelp',
     description='A multi-datacenter graphing tool',
