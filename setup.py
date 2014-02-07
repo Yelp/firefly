@@ -7,12 +7,14 @@ requirements = [
     "pyyaml >= 3.09",
     "tornado >= 1.1, <2.0",
     "testify == 0.5.2",
-    "PyHamcrest >= 1.8",
+    "PyHamcrest == 1.8",
 ]
 
+
 # python-rrdtool doesn't install cleanly out of the box on OS X
-if not (os.name == "posix" and platform.system() == "Darwin"):
-    requirements.append("python-rrdtool >= 1.4.7")
+# TODO: python-rrdtool not compiling cleanly on lucid either -- fix later
+#if not (os.name == "posix" and platform.system() == "Darwin"):
+#    requirements.append("python-rrdtool >= 1.4.7")
 
 setup(
     name='firefly',

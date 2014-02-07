@@ -7,4 +7,8 @@ docs:
 tests: test
 
 test:
-	testify --summary --exclude-suite disabled tests
+	tox
+
+clean:
+	find . -name "*.pyc" -delete
+	find . -name "__pycache__" -delete
