@@ -1,5 +1,6 @@
 import os
 import platform
+from setuptools import find_packages
 from setuptools import setup
 
 requirements = [
@@ -22,9 +23,10 @@ setup(
     provides=['firefly'],
     author='Yelp',
     description='A multi-datacenter graphing tool',
-    packages=['firefly'],
+    packages=find_packages(exclude=['tests']),
     long_description="""Firefly provides graphing of performance metrics from multiple data centers and sources.
     Firefly works with both the Ganglia and Statmonster data sources.
     """,
-    install_requires=requirements
+    install_requires=requirements,
+    include_package_data=True  # See MANIFEST.in
 )
