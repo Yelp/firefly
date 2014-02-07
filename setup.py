@@ -6,7 +6,7 @@ requirements = [
     "pycurl",
     "pyyaml >= 3.09",
     "tornado >= 1.1, <2.0",
-    "testify == 0.3.10",
+    "testify == 0.5.2",
     "PyHamcrest >= 1.8",
 ]
 
@@ -16,7 +16,7 @@ if not (os.name == "posix" and platform.system() == "Darwin"):
 
 setup(
     name='firefly',
-    version='1.1.0',
+    version='1.1.1',
     provides=['firefly'],
     author='Yelp',
     description='A multi-datacenter graphing tool',
