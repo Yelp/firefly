@@ -3,3 +3,7 @@
 *.sqlite
 *.yaml
 !config.yaml.example
+.tox
+.coverage
+virtualenv_run
+firefly.egg-info
