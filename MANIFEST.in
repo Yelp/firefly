@@ -1,4 +1,5 @@
 # Used to include static files in the distribution -- see 'include_package_data' in setup.py
 recursive-include firefly/static *
+recursive-include firefly/templates *
 prune firefly/static/d3/.git
 prune firefly/static/vendor/closure_library/.git
