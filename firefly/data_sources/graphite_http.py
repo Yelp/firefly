@@ -1,5 +1,5 @@
-import colorsys
 from datetime import datetime
+from itertools import izip
 from urllib2 import urlopen
 from urlparse import urljoin
 
@@ -84,7 +84,9 @@ class GraphiteHTTP(firefly.data_source.DataSource):
         fmt = '%H:%M_%Y%m%d'
         from_str = datetime.fromtimestamp(start).strftime(fmt)
         until_str = datetime.fromtimestamp(end).strftime(fmt)
-        output = []
+
+        serieses = []
+        step = None
 
         # TODO: Minimize the number of http calls -- handle multiple sources in a single call
         for metric_segments in sources:
@@ -99,16 +101,23 @@ class GraphiteHTTP(firefly.data_source.DataSource):
             render_json = urlopen(render_url).read()
             render_results = json.loads(render_json)
 
+            values = []
             for result in render_results:
-                datapoints = result['datapoints']
-                for datapoint in datapoints:
-                    output_datapoint = {
-                        't': datapoint[1],
-                        'v': [datapoint[0]]
-                    }
-                    output.append(output_datapoint)
+                for datapoint in result['datapoints']:
+                    values.append(datapoint[0])
 
-        return json.dumps(output)
+            # Compute step and make sure it is consistent across all metrics
+            current_step = (end - start) / (len(values) - 1)
+            if step is None:
+                step = current_step
+            elif current_step != step:
+                self.logger.error('Number of values from two different serieses does not match! %s != %s' % (step, current_step))
+            serieses.append(values)
+
+        out = []
+        for timestamp, values in izip(xrange(start, end+step, step), izip(*serieses)):
+            out.append({'t': timestamp, 'v': [v for v in values]})
+        return json.dumps(out)
 
     def legend(self, sources):
         return self._svc(sources)
