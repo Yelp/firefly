@@ -109,10 +109,10 @@ class GraphiteHTTPTest(T.TestCase):
             mock_urlopen.assert_called_with(match(starts_with('http://dontcare.com:8080/metrics/find')))
             mock_urlopen.assert_called_with(match(contains_string('query=a.b.c.*')))
 
-    def test_data_single_source(self):
+    def test_data_single_metric(self):
         sources = [['servers', 'admin1', 'loadavg', '01']]
         start = 1391047920
-        end = 1391051520
+        end = 1391048100
 
         with patch_urlopen() as mock_urlopen:
             mock_response = Mock()
@@ -124,7 +124,7 @@ class GraphiteHTTPTest(T.TestCase):
                         [2.0, 1391047920],
                         [6.0, 1391047980],
                         [9.0, 1391048040],
-                        [null, 1391048100]
+                        [null,1391048100]
                     ]
                 }
             ]
@@ -147,3 +147,60 @@ class GraphiteHTTPTest(T.TestCase):
 
             mock_urlopen.assert_called_with(match(starts_with('http://dontcare.com:8080/render')))
             mock_urlopen.assert_called_with(match(contains_string('.'.join(sources[0]))))
+
+    def test_data_multiple_metrics(self):
+        sources = [
+            ['servers', 'admin1', 'loadavg', '01'],
+            ['servers', 'admin2', 'loadavg', '01'],
+        ]
+        start = 1391047920
+        end = 1391048100
+
+        with patch_urlopen() as mock_urlopen:
+            mock_admin1_response = Mock()
+            mock_admin1_response.read.return_value = """
+            [
+                {
+                    "target": "servers.admin1.loadavg.01",
+                    "datapoints": [
+                        [2.0, 1391047920],
+                        [6.0, 1391047980],
+                        [9.0, 1391048040],
+                        [null,1391048100]
+                    ]
+                }
+            ]
+            """
+
+            mock_admin2_response = Mock()
+            mock_admin2_response.read.return_value = """
+            [
+                {
+                    "target": "servers.admin2.loadavg.01",
+                    "datapoints": [
+                        [1.0, 1391047920],
+                        [7.0, 1391047980],
+                        [10.0, 1391048040],
+                        [null,1391048100]
+                    ]
+                }
+            ]
+            """
+            mock_urlopen.side_effect = [mock_admin1_response, mock_admin2_response]
+            result_json = self.ds.data(sources, start, end, width=100)
+                        # [null, 1391048100]
+
+            expected_results = [
+                { 't': 1391047920, 'v': [2.0, 1.0]},
+                { 't': 1391047980, 'v': [6.0, 7.0]},
+                { 't': 1391048040, 'v': [9.0, 10.0]},
+                { 't': 1391048100, 'v': [None, None]}
+            ]
+
+            result_list = json.loads(result_json)
+            T.assert_equal(4, len(result_list))
+
+            for i,expected_result in enumerate(expected_results):
+                T.assert_dicts_equal(expected_result, result_list[i])
+
+            T.assert_equal(2, mock_urlopen.call_count)

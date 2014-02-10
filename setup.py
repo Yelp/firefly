@@ -32,7 +32,7 @@ if 'sdist' in sys.argv or 'bdist_wheel' in sys.argv:
 
 setup(
     name='firefly',
-    version='1.1.4',
+    version='1.1.5',
     provides=['firefly'],
     author='Yelp',
     description='A multi-datacenter graphing tool',
