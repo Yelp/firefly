@@ -5,20 +5,25 @@ class firefly::testdata {
     owner  => root,
     group  => root,
     mode   => '0755',
-  }
-
-  file { '/tmp/test-whisper-data.sh':
+  } ->
+  file { '/usr/local/bin/fake-whisper-update.sh':
     ensure  => directory,
     owner   => root,
     group   => root,
     mode    => '0755',
-    source  => "puppet:///modules/firefly/test-whisper-data.sh",
-    require => File['/var/lib/firefly'],
-  }
-
-  exec { 'whisper-create':
-    command => "/usr/bin/start-stop-daemon --start -x /tmp/test-whisper-data.sh",
-    require => File['/tmp/test-whisper-data.sh']
+    source  => "puppet:///modules/firefly/fake-whisper-update.sh",
+  } ->
+  file { '/etc/init.d/fake-whisper-update':
+    owner => root,
+    group => root,
+    mode   => '0755',
+    source => "puppet:///modules/firefly/fake-whisper-update.init",
+  } ->
+  service { 'fake-whisper-update':
+    ensure     => running,
+    enable     => true,
+    hasrestart => false,
+    hasstatus  => false,
   }
 
 }

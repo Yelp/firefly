@@ -1,0 +1,25 @@
+#!/bin/bash
+
+start() {
+    echo -n "Starting ... "
+    /sbin/start-stop-daemon -p /var/run/fake-whisper-update.pid -m -b -S -x /usr/local/bin/fake-whisper-update.sh
+    echo "done"
+}
+
+stop() {
+    echo -n "Stopping ... "
+    /sbin/start-stop-daemon -p /var/run/fake-whisper-update.pid -K -R TERM/10/KILL --oknodo
+    echo "done"
+}
+
+case "$1" in
+start)
+    start
+    ;;
+stop)
+    stop
+    ;;
+*)
+    echo "Usage: $0 {start|stop}"
+    exit 1
+esac
