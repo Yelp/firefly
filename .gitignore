@@ -7,3 +7,5 @@
 .coverage
 virtualenv_run
 firefly.egg-info
+firefly.log
+.vagrant
