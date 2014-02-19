@@ -1,0 +1,38 @@
+#!/bin/bash
+
+PYTHON="/usr/bin/env python"
+CONFIG="/etc/firefly/firefly.yaml"
+LOGGING_CONFIG="/etc/firefly/logging.conf"
+PIDFILE="/var/run/firefly.pid"
+FIREFLY_PATH="/vagrant"
+export PYTHONPATH=$FIREFLY_PATH
+
+start() {
+    echo -n "Starting ... "
+    FIREFLY_ARGS="-c "$CONFIG" --loggingconf "$LOGGING_CONFIG""
+    /sbin/start-stop-daemon -d $FIREFLY_PATH -p $PIDFILE -m -b -S -x $PYTHON -- -m firefly.main $FIREFLY_ARGS
+    echo "done"
+}
+
+stop() {
+    echo -n "Stopping ... "
+    /sbin/start-stop-daemon -d $FIREFLY_PATH -p $PIDFILE -K -R TERM/10/KILL --oknodo
+    pkill -f 'firefly.main'
+    echo "done"
+}
+
+case "$1" in
+start)
+    start
+    ;;
+stop)
+    stop
+    ;;
+restart)
+    stop
+    start
+    ;;
+*)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac

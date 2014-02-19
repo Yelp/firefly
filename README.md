@@ -87,6 +87,10 @@ If you do not have Ganglia running, comment out this data source in the `data_so
 
 If you want to run with any additional custom data sources, add them to the `data_sources` section and provide the kwargs they will be passed in the `data_source_config` section.
 
+### Vagrant
+
+If you have [Vagrant](http://www.vagrantup.com/) installed running `vagrant up` will get you started. When the virtual machine is up you can point your browser to `http://localhost:8889`. See Vagrantfile for the details of the setup.
+
 ### Running Firefly
 
 `python -m firefly.main -c <configuration file> --testing`
