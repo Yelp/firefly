@@ -89,10 +89,8 @@ function fetchData(dataServer, sources, start, end) {
 function fetchAnnotations(dataServer, sources, start, end) {
 	var xhr = new XMLHttpRequest();
 	var url = dataServer + "/annotations?" +
-		"sources=" + encodeURIComponent(JSON.stringify(sources.map(function (x){ return x.slice(1); }))) +
-		"&start="  + (start - 60) + // buffer for one minute
+		"start="  + (start - 60) + // buffer for one minute
 		"&end="    + end +
-		"&width="  + data.width +
 		"&token="  + data.token;
 
 	xhr.open("GET", url, true);
