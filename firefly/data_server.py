@@ -72,7 +72,9 @@ class GraphBaseHandler(tornado.web.RequestHandler):
     """Base class implementing common ops"""
 
     def get_params(self):
-        sources = json.loads(self.get_argument('sources'))
+        sources = self.get_argument('sources', '')
+        if sources != '':
+            sources = json.loads(sources)
         start = int(self.get_argument('start', 0))
         end = int(self.get_argument('end', 0))
         zoom = int(self.get_argument('zoom', 0))
