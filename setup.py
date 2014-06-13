@@ -9,8 +9,6 @@ requirements = [
     "pycurl",
     "pyyaml == 3.10",
     "tornado >= 1.1, <2.0",
-    "testify == 0.5.2",
-    "PyHamcrest == 1.8",
 ]
 
 
