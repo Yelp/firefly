@@ -36,9 +36,11 @@ self.onmessage = function(evt) {
 	}
 	currentXHRs = {};
 	previousXHRs = {};
+        mapXHRs = {};
 	annotationsXHR && annotationsXHR.abort();
 
 	sourcesPerDataServer = {};
+        sourcesPerMapDataServer = {}
 
 	var dataServer;
 
@@ -50,6 +52,14 @@ self.onmessage = function(evt) {
 		}
 		sourcesPerDataServer[dataServer][sourceIndex] = source;
 	}
+        for (var sourceIndex = 0; sourceIndex < data.mapsources.length; sourceIndex++) {
+                var source = data.mapsources[sourceIndex];
+                dataServer = source[0];
+                if (!sourcesPerMapDataServer[dataServer]) {
+                        sourcesPerMapDataServer[dataServer] = {};
+                }
+                sourcesPerMapDataServer[dataServer][sourceIndex] = source;
+        }
 
 	for (dataServer in sourcesPerDataServer) {
 		var dataServerSources = [];
@@ -64,6 +74,16 @@ self.onmessage = function(evt) {
 			previousXHRs[dataServer] = fetchData(dataServer, dataServerSources, data.start - data.offset, data.end - data.offset);
 		}
 	}
+        for (dataServer in sourcesPerMapDataServer) {
+                var dataServerSources = [];
+                var sortedDataServerPosKeys = Object.keys(sourcesPerMapDataServer[dataServer]).sort();
+                for (var _posKey = 0; _posKey < sortedDataServerPosKeys.length; _posKey++) {
+                        var posKey = sortedDataServerPosKeys[_posKey];
+                        dataServerSources.push(sourcesPerMapDataServer[dataServer][posKey]);
+                }
+                // start our new request(s)
+                mapXHRs[dataServer] = fetchMapData(dataServer, dataServerSources, data.start, data.end);
+        }
 	if (data.options.show_annotations) {
 		// TODO (fhats): Pull annotations from all the different data servers, not just one
 		// TODO (fhats): Annotations shouldn't require any knowledge of the sources.
@@ -86,6 +106,20 @@ function fetchData(dataServer, sources, start, end) {
 	return xhr;
 }
 
+function fetchMapData(dataServer, sources, start, end) {
+        var xhr = new XMLHttpRequest();
+        var url = dataServer + "/mapdata?" +
+                "sources=" + encodeURIComponent(JSON.stringify(sources.map(function (x){ return x.slice(1); }))) +
+                "&start="  + (start - 60) + // buffer for one minute
+                "&end="    + end +
+                "&width="  + Math.round(data.width/2) +
+                "&token="  + data.token;
+
+        xhr.open("GET", url, true);
+        xhr.onreadystatechange = handleResponse;
+        xhr.send(null);
+        return xhr;
+}
 function fetchAnnotations(dataServer, sources, start, end) {
 	var xhr = new XMLHttpRequest();
 	var url = dataServer + "/annotations?" +
@@ -115,6 +149,10 @@ function allXHRsComplete() {
 		xhr = currentXHRs[src];
 		if (xhr.readyState !== 4) return false;
 	}
+        for (src in mapXHRs) {
+                xhr = mapXHRs[src];
+                if (xhr.readyState !== 4) return false;
+        }
 	if (data.options.show_annotations && annotationsXHR && annotationsXHR.readyState !== 4) return false;
 
 	return true;
@@ -180,6 +218,17 @@ function dataObjFromXHRs(xhrs) {
 	return objectToDataList(parsedData);
 }
 
+function mapObjFromXHRs(xhrs) {
+        var dataServer;
+        var response;
+        var parsedData = [];
+        for (dataServer in xhrs) {
+                response = JSON.parse(xhrs[dataServer].responseText);
+                parsedData.push.apply(parsedData, response)
+               
+        }
+        return parsedData;
+}
 
 /**
  * Takes an object with keys as timestamp values and values as arrays of data
@@ -211,6 +260,7 @@ function handleResponse() {
 	// otherwise let's process our incoming data
 	var currentData = [];
 	var previousData = [];
+        var mapData = [];
 	var annotationsData = [];
 
 	currentData = dataObjFromXHRs(currentXHRs);
@@ -227,13 +277,58 @@ function handleResponse() {
 			annotationsData = [];
 		}
 	}
-
-	processData(currentData, previousData, annotationsData);
+        mapData = mapObjFromXHRs(mapXHRs);
+	processData(currentData, previousData, annotationsData, mapData);
 }
 
-function processData(currentData, previousData, annotationsData) {
+function processMapData(mapData) {
+    // Preprocess data to a 2d array, also fill empty y value if there is a gap.
+    // Assumed data returned from rrdtool has equal spaced time value.
+    // Also calculated culmulative probability function cdf.
+    if (mapData.length != 1) { return }
+    var data = mapData[0];
+    var y = data["y"];
+    var d = data["d"];
+    var upbound = Math.max.apply(Math, y);
+    var lowbound = Math.min.apply(Math, y);
+    var ts = d.map(function(v) { return v.t; });
+    var start = Math.min.apply(Math, ts); 
+    var end = Math.max.apply(Math, ts);
+    var y_size = upbound - lowbound + 1;
+    var x_size = ts.length;
+    var x_step = (end - start) / (x_size -1);
+    var empty_y = new Array(y_size);
+    for (var i = 0; i < y_size; i++) { empty_y[i] = 0.0 }
+    var pdf = new Array(x_size);
+    var cdf = new Array(x_size);
+    for (var i = 0; i < x_size; i++) {
+        pdf[i] = empty_y.slice(0);
+        cdf[i] = empty_y.slice(0);
+        var v = d[i].v;
+        var normal = v.reduce(function(a, b) {return a+b})
+        if (normal > 0) {
+           for (var j = 0; j < v.length; j++) {
+               pdf[i][y[j]-lowbound] = v[j]/normal;
+           }
+           var cur = 0.0;
+           for(var j = 0; j < y_size; j++) {
+               cur += pdf[i][j];
+               cdf[i][j] = cur;
+           }
+        }
+    } 
+    return { "x0": start,
+             "x_step": x_step,
+             "y0": lowbound,
+             "y_step": 1,
+             "pdf": pdf,
+             "cdf": cdf} 
+}
+
+function processData(currentData, previousData, annotationsData, mapData) {
 	var stackLayers = data.options.stacked_graph;
 	var layerCount = data.sources.length;
+        var mapLayer = processMapData(mapData);
 
 	// keep track of the global max and min
 	var max = -Infinity, min = Infinity;
@@ -302,6 +397,7 @@ function processData(currentData, previousData, annotationsData) {
 		"layerCount"     : layerCount,
 		"currentLayers"  : currentLayers,
 		"previousLayers" : previousLayers,
-		"annotations"    : annotations
+		"annotations"    : annotations,
+                "mapLayer"       : mapLayer
 	});
 }

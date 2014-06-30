@@ -11,6 +11,7 @@ firefly.Renderer = function(graph, makeURL, container, titleEl, legendEl, contai
 	this.makeURL_ = makeURL;
 	this.graph_ = graph;
 	this.sources = graph.getSources();
+        this.mapsources = graph.getMapSources();
 	this.container = container;
 	this.legendEl = legendEl;
 	this.titleEl = titleEl;
@@ -26,7 +27,7 @@ firefly.Renderer = function(graph, makeURL, container, titleEl, legendEl, contai
 	this.tooltip_ = tooltip[0][0];
 
 	// a web worker to do our background processing
-	this.worker = new Worker(this.makeURL_("static/js/renderer_worker.js"));
+	this.worker = new Worker(this.makeURL_("static/js/renderer_worker.js?10"));
 	this.worker.onmessage = $.proxy(function(evt) {
 		d3.select(this.container).style("opacity", 1.0);
 		this._redraw(evt.data);
@@ -37,6 +38,7 @@ firefly.Renderer = function(graph, makeURL, container, titleEl, legendEl, contai
 
 	// initialize the root svg and its various subgroups
 	this._createSVG();
+        this._createCanvas();
 
 	// trigger the drawing of the axes
 	this.resize();
@@ -70,6 +72,9 @@ firefly.Renderer.prototype._createSVG = function() {
 	this.xScale = d3.time.scale();
 	this.xAxis = d3.svg.axis().orient("bottom").scale(this.xScale).tickSubdivide(true).tickPadding(6);
 	this.yAxis = d3.svg.axis().orient("right");
+        var lScale = d3.scale.linear().domain([0,0.25,0.5,0.75,0.9,0.99,1]).range([0,30,60,90,120,150,180]);
+        this.lAxis = d3.svg.axis().orient("bottom").scale(lScale).tickValues([0,0.25,0.5,0.75,0.9,0.99,1]).tickFormat(d3.format("%"))
+                     .tickSize(4,0);
 
 	// check for null data
 	checkDiscontinuous = function(d) {return d.y !== null;}
@@ -102,6 +107,7 @@ firefly.Renderer.prototype._createSVG = function() {
 	// a bunch of groups to hold our various objects
 	g.append("svg:g").attr("class", "y axis");
 	g.append("svg:g").attr("class", "x axis");
+        g.append("svg:g").attr("class", "l axis");
 	g.append("svg:g").attr("class", "lines");
 	g.append("svg:g").attr("class", "prev-lines");
 	g.append("svg:g").attr("class", "areas");
@@ -115,6 +121,20 @@ firefly.Renderer.prototype._createSVG = function() {
 		.attr('y2', this.height)
 		.style('visibility', 'hidden');
 };
+
+firefly.Renderer.prototype._createCanvas = function() {
+    var renderer = this;
+    d3.select(this.container).style("position", "relative");
+    this.canvas = d3.select(this.container).append("canvas").style({"position":"absolute", "left": this.margins.left+"px", "top": this.margins.top+"px"})
+                             .style("width", this.width+"px")
+                             .style("height", this.height+"px")
+                             .style("image-rendering", "-webkit-optimize-contrast");
+
+    this.canvaslegend = d3.select(this.container).append("canvas").style({"position":"absolute", "right": "80px", "bottom": "50px"})
+                             .style("width", "180px")
+                             .style("height", "20px")
+                             .style("image-rendering", "-webkit-optimize-contrast");
+}
 
 
 /**
@@ -351,6 +371,8 @@ firefly.Renderer.prototype.resize = function() {
 		.attr("transform", "translate(0," + this.height + ")");
 	div.select(".y.axis")
 		.attr("transform", "translate(" + this.width + ",0)");
+        div.select(".l.axis")
+                .attr("transform", "translate(" + (this.width-206) + "," +(this.height-30) + ")");
 	div.select("rect")
 		.attr("width", this.width)
 		.attr("height", this.height);
@@ -367,6 +389,7 @@ firefly.Renderer.prototype.render = function (zoom, options) {
 	// tell our worker to retrieve and process the data
 	this.worker.postMessage({
 		"sources"    : this.sources,
+                "mapsources" : this.mapsources,
 		"zoom"       : zoom,
 		"options"    : options,
 		"width"      : this.width,
@@ -384,6 +407,7 @@ firefly.Renderer.prototype._redraw = function (data) {
 	var that = this;
 	this.lastData = data;
 	this.lastOptions_ = data.options;
+        this.updateMap(data.mapLayer);
 
 	this.lastData.currentLayersXAxes = [];
 	for (var j=0; j < data.currentLayers.length; j++) {
@@ -460,7 +484,15 @@ firefly.Renderer.prototype._redraw = function (data) {
 	}
 
 	// prepare the scales
-	if (data.options.y_axis_log_scale) {
+        if (data.mapLayer != undefined) {
+            data.options.y_axis_log_scale = 1
+            var max = 5.0;
+            var min = 0.0125;
+            this.yScale = d3.scale.log()
+                        .clamp(true)
+                        .domain([min, max])
+                        .range([this.height, 0]);
+        } else if (data.options.y_axis_log_scale) {
 		var max = Math.max(1e-6, data.max);
 		var min = Math.max(1e-6, data.min);
 		this.yScale = d3.scale.log()
@@ -480,7 +512,11 @@ firefly.Renderer.prototype._redraw = function (data) {
 	var tickFormat = data.options.y_axis_log_scale ?
 		this.yScale.tickFormat() :
 		this._linearTickFormat(this.yScale.domain(), this.yAxis.ticks()[0]);
-	this.yAxis.scale(this.yScale).tickFormat(tickFormat);
+        if (data.mapLayer != undefined) {
+            this.yAxis.scale(this.yScale).tickValues([0.02,0.05,0.1,0.2,0.5,1,2,5]).tickFormat(d3.format('.2f'));
+        } else {
+	    this.yAxis.scale(this.yScale).tickFormat(tickFormat);
+        }
 	this.xScale.domain([data.start * 1000, data.end * 1000]);
 
 	// draw the guide-line, dots and tooltip
@@ -539,11 +575,13 @@ firefly.Renderer.prototype._redraw = function (data) {
 
 	// draw the data on the new scales
 	transition.select(".y.axis").call(this.yAxis);
-	transition.select(".x.axis").call(this.xAxis)
-
+	transition.select(".x.axis").call(this.xAxis);
+        if (data.mapLayer) {
+            transition.select(".l.axis").call(this.lAxis);
+        }
 	// remember if we had any data
 	var hadData = !!this.hasData;
-	this.hasData = !!(data.currentLayers[0].data.length || data.previousLayers[0].data.length);
+	this.hasData = !!(data.currentLayers[0] && data.currentLayers[0].data.length || data.previousLayers[0] && data.previousLayers[0].data.length);
 	if (!hadData && this.hasData) {
 		this.svg.on('mouseover', $.proxy(this.showGuide, this));
 		this.svg.on('mouseout', $.proxy(this.hideGuide, this));
@@ -559,6 +597,59 @@ firefly.Renderer.prototype._redraw = function (data) {
 	}
 };
 
+firefly.Renderer.prototype.updateMap = function(data) {
+    if (data == undefined) {return}
+    var width = data.pdf.length;
+    var height = data.pdf[0].length;
+    var cdf = data.cdf;
+    var pdf = data.pdf;
+    var y0 = data.y0;
+    var alpha = d3.scale.pow().exponent(.25).domain([0,0.12,1]).range([0, 255,255])
+    var color = d3.scale.linear().domain([0,0.25,0.5,0.75,0.9,0.99,1]).range(["red", "orange", "yellow", "green", "blue", "violet", "red"]);
+    function drawImage(canvas) {
+         //var color = d3.scale.linear().domain([0,0.05, 0.1, 0.25,0.5,0.75,0.9,0.99,1]).range(["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf", "#999999"])
+    //     var color = d3.scale.quantile().domain([0,0.01, 0.05, 0.1, 0.25,0.5,0.75,0.9,0.95, 0.99,1]).range([ //"#a6cee3", 
+    //                     "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a", "#ffff99"])
+         var context = canvas.node().getContext("2d"),
+            image = context.createImageData(width, 80);
+         for (var y = 79, p = -1; y >= 0; --y) {
+             for (var x = 0; x < width; ++x) {
+               if (y<y0 || y>=y0+height) {
+                   p += 3;
+                   image.data[++p] = 0;
+               } else {
+                   var c = d3.rgb(color(cdf[x][y-y0]));
+                   //var c = d3.hsl(cdf[x][y]*360, 1, 0.7).rgb();
+                   image.data[++p] = c.r;
+                   image.data[++p] = c.g;
+                   image.data[++p] = c.b;
+                   image.data[++p] = alpha(pdf[x][y-y0]);
+               }
+             }
+          }
+          context.putImageData(image, 0, 0);
+    }
+
+    function drawLegend(canvas) {
+         var context = canvas.node().getContext("2d"),
+            image = context.createImageData(180, 20);
+         var legend = d3.scale.linear().domain([0,30,60,90,120,150,180]).range(["red", "orange", "yellow", "green", "blue", "violet", "red"]);
+         for (var y = 19, p = -1; y >= 0; --y) {
+             for (var x = 0; x < 180; ++x) {
+               var c = d3.rgb(legend(x));
+               image.data[++p] = c.r;
+               image.data[++p] = c.g;
+               image.data[++p] = c.b;
+               image.data[++p] = 255;
+             }
+          }
+          context.putImageData(image, 0, 0);
+    }
+    this.canvas.attr("width", width).attr("height", 80).style("z-index", -1)
+               .style("width", this.width+"px").style("height", this.height+"px").call(drawImage);
+    this.canvaslegend.attr("width", 180).attr("height", 20).call(drawLegend); 
+    
+}
 
 /**
  * ensure we have drawn the correct guide dots on the svg (one per line)
