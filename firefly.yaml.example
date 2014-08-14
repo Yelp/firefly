@@ -48,6 +48,10 @@ data_server:
         data_sources.graphite_wsp.GraphiteWSP:
             # path to the root of Graphite whisper files
             graphite_storage: null
+        data_sources.librato.Librato:
+            librato_url: "https://metrics-api.librato.com/"
+            username: "librato_username"
+            password: "librato_password"
 
     # The location of the SQLite database file which contains the data store
     # for the DATA SERVER
