@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta
-from urllib2 import urlopen, Request
+from datetime import datetime
+from datetime import timedelta
 from itertools import izip
 from urlparse import urljoin
 
-import base64
 import requests
 
 try:
@@ -25,6 +24,7 @@ class Librato(firefly.data_source.DataSource):
         self.librato_url = kwargs['librato_url']
         self.username = kwargs['username']
         self.password = kwargs['password']
+        self.resolution = 60
 
     def list_path(self, path):
         query = '.'.join(path + ['*'])
@@ -37,13 +37,11 @@ class Librato(firefly.data_source.DataSource):
         if metric_name:
             params = {
                 'start_time': (datetime.now() - timedelta(hours=1)).strftime('%s'),
-                'resolution': 60
+                'resolution': self.resolution
             }
             
-            fmt = '%Y-%m-%d %H:%M:%S'
-            from_str = datetime.fromtimestamp(float(params['start_time'])).strftime(fmt)
-
-            find_url = urljoin(self.librato_url, 'v1/metrics/' + metric_name[:-1] + '?' + '&'.join(['%s=%s' % (k, v) for k, v in params.items()]))
+            params = 'v1/metrics/' + metric_name[:-1] + '?' + '&'.join(['%s=%s' % (k, v) for k, v in params.items()])
+            find_url = urljoin(self.librato_url, params)
             r = requests.get(find_url, auth=(self.username, self.password))
             find_results = r.json()
 
@@ -81,23 +79,18 @@ class Librato(firefly.data_source.DataSource):
 
     def data(self, sources, start, end, width):
 
-        serieses = []
-        step = None
-
-        fmt = '%Y-%m-%d %H:%M:%S'
-        from_str = datetime.fromtimestamp(start).strftime(fmt)
-
         params = {
             'start_time': start,
             'end_time': end,
-            'resolution': 60
+            'resolution': self.resolution
         }
 
         metric_name = sources[0][0]
         source = sources[0][1]
 
         
-        render_url = urljoin(self.librato_url, 'v1/metrics/' + metric_name + '?' + '&'.join(['%s=%s' % (k, v) for k, v in params.items()]))
+        params = 'v1/metrics/' + metric_name + '?' + '&'.join(['%s=%s' % (k, v) for k, v in params.items()])
+        render_url = urljoin(self.librato_url, params)
 
         r = requests.get(render_url, auth=(self.username, self.password))
         render_results = r.json()
