@@ -2,4 +2,4 @@
 -e .
 PyYAML==3.10
 tornado>= 1.1, <2.0
-requests
+requests>= 2.3, < 3.0

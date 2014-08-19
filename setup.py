@@ -9,6 +9,7 @@ requirements = [
     "pycurl",
     "pyyaml == 3.10",
     "tornado >= 1.1, <2.0",
+    "requests >=2.3, <3.0",
 ]
 
 

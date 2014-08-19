@@ -6,9 +6,9 @@ from urlparse import urljoin
 import requests
 
 try:
-    import json
-except ImportError:
     import simplejson as json
+except ImportError:
+    import json
 
 import firefly.data_source
 
@@ -24,8 +24,9 @@ class Librato(firefly.data_source.DataSource):
         self.librato_url = kwargs['librato_url']
         self.username = kwargs['username']
         self.password = kwargs['password']
-        self.resolution = 60
-
+        self.resolution = kwargs['resolution']
+        self.offset = 100
+    
     def list_path(self, path):
         query = '.'.join(path + ['*'])
         metric_name = query.split('*')[0]
@@ -39,9 +40,9 @@ class Librato(firefly.data_source.DataSource):
                 'start_time': (datetime.now() - timedelta(hours=1)).strftime('%s'),
                 'resolution': self.resolution
             }
-            
-            params = 'v1/metrics/' + metric_name[:-1] + '?' + '&'.join(['%s=%s' % (k, v) for k, v in params.items()])
-            find_url = urljoin(self.librato_url, params)
+           
+            find_url = self._build_librato_metrics_url(metric_name[:-1], params)
+
             r = requests.get(find_url, auth=(self.username, self.password))
             find_results = r.json()
 
@@ -61,7 +62,7 @@ class Librato(firefly.data_source.DataSource):
                 r = requests.get(find_url, auth=(self.username, self.password))
                 find_results = r.json()
 
-                offset += 100
+                offset += self.offset
 
                 if find_results['metrics']:
                     for metric in find_results['metrics']:
@@ -87,10 +88,8 @@ class Librato(firefly.data_source.DataSource):
 
         metric_name = sources[0][0]
         source = sources[0][1]
-
-        
-        params = 'v1/metrics/' + metric_name + '?' + '&'.join(['%s=%s' % (k, v) for k, v in params.items()])
-        render_url = urljoin(self.librato_url, params)
+       
+        render_url = self._build_librato_metrics_url(metric_name, params)
 
         r = requests.get(render_url, auth=(self.username, self.password))
         render_results = r.json()
@@ -99,18 +98,24 @@ class Librato(firefly.data_source.DataSource):
 
         for result in render_results['measurements']:
             # Librato shorterns really long source names with a '..'
-            # So, we check if either the source name matches or the shortened source name is a substring
-            source_substrings = source.split('..')
-            if (source == result) or (source_substrings[0] in result and source_substrings[1] in result):
+            # So, we check if either the source name matches or the beginning and end of the shortened source name are substrings
+            if (source == result) or all(substr in result for substr in source.split('..')):
                 for datapoint in render_results['measurements'][source]:
-                    out.append({'t': datapoint['measure_time'], 'v': [datapoint['value']]})
+                    point = {}
+                    point['t'] = datapoint['measure_time']
+                    point['v'] = [datapoint['value']]
+                    out.append(point)
                 break
         
         return json.dumps(out)
+        
+    def _build_librato_metrics_url(self, metric_name, params):
+        url_params = 'v1/metrics/' + metric_name + '?'
+        url_params += '&'.join(['%s=%s' % (k, v) for k, v in params.items()])
+        return urljoin(self.librato_url, url_params)
 
     def legend(self, sources):
         return self._svc(sources)
 
     def title(self, sources):
         return ["librato"]
-
