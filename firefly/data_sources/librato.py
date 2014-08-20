@@ -97,7 +97,7 @@ class Librato(firefly.data_source.DataSource):
         out = []
 
         for result in render_results['measurements']:
-            # Librato shorterns really long source names with a '..'
+            # Librato shortens really long source names with a '..'
             # So, we check if either the source name matches or the beginning and end of the shortened source name are substrings
             if (source == result) or all(substr in result for substr in source.split('..')):
                 for datapoint in render_results['measurements'][source]:
