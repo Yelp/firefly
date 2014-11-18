@@ -279,11 +279,12 @@ class AggregatingDataSource(firefly.data_source.DataSource):
 
         try:
             response = urlopen(url)
+            return json.loads(response.read())
         except URLError:
             self.logger.exception("Failed to fetch data for %s from %s" % (
                 source, data_source['data_server_url']))
+            return []
 
-        return json.loads(response.read())
 
     def _data_source_for_stat_key(self, stat_key):
         """Given a 'top-level' source item (i.e. the first item in a source),
