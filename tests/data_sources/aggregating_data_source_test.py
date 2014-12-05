@@ -530,6 +530,29 @@ class AggregatingDataSourceTest(T.TestCase):
 			T.assert_equal(query_params['width'], [str(test_width)])
 			T.assert_equal(query_params['token'], [expected_token])
 
+	def test_request_data_from_ds_urlerror(self):
+		test_data_source = self.data_source.data_sources[0]
+		test_sources = [
+			['src.EndpointTIming', 'stat.A', 'variant.logged_in'],
+			['src.ErrorCount', 'stat.B', 'variant.logged_out']
+		]
+		test_start = 100
+		test_end = 200
+		test_width = 30
+
+		with self._patch_urlopen() as mock_urlopen:
+                        mock_urlopen.side_effect = urllib2.URLError('fake URLError')
+
+			returned_data = self.data_source._request_data_from_ds(test_data_source,
+				test_sources,
+				test_start,
+				test_end,
+				test_width)
+
+			T.assert_equal(mock_urlopen.call_count, 1)
+			T.assert_equal(len(mock_urlopen.call_args[0]), 1)
+			T.assert_equal(returned_data, [])
+
 	def test_data_source_for_stat_key_in_cache(self):
 		"""Tests that _data_source_for_stat_key uses the key_mapping_cache if
 		it can.
