@@ -883,15 +883,18 @@ firefly.Renderer.prototype.legend = function(sources, leftTrim, rightTrim) {
 		}
 
 		var dataServerDesc = that._dsDescFromSourcerer(source[0]);
-		var li = $("<li>").appendTo(ul);
-		var div = $("<div>").addClass("color").appendTo(li);
-
 		var displayedSourceComponents = source.slice(sliceStart, sliceEnd);
 		if (multipleDataServers)
 			displayedSourceComponents.unshift(dataServerDesc);
 
-		$(div).css("background-color", that.hsl(i / sources.length));
-		$("<span>").html(displayedSourceComponents.join(RIGHT_ARROW)).appendTo(li);
+		if (displayedSourceComponents.length > 0) {
+			// Present legend only when there is something to display
+			var li = $("<li>").appendTo(ul);
+			var div = $("<div>").addClass("color").appendTo(li);
+
+			$(div).css("background-color", that.hsl(i / sources.length));
+			$("<span>").html(displayedSourceComponents.join(RIGHT_ARROW)).appendTo(li);
+		}
 	});
 	$(this.legendEl).empty().append(ul);
 	this.resize();
