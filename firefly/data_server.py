@@ -123,6 +123,22 @@ class DataHandler(GraphBaseHandler):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.write(data)
 
+class MapDataHandler(GraphBaseHandler):
+    """Handler for json graph data"""
+
+    #@token_authed
+    def get(self):
+        params = self.get_params()
+        data = params['data_source'].mapdata(
+            params['sources'],
+            params['start'],
+            params['end'],
+            params['width'])
+
+        self.set_header("Content-Type", 'application/json')
+        self.set_header("Cache-Control", "no-cache, must-revalidate")
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.write(data)
 
 class GraphLegendHandler(GraphBaseHandler):
     """Handler for the legend data for a given graph"""
@@ -246,7 +262,8 @@ def initialize_data_server(config_global, secret_key=None):
         (r"/ping", PingHandler),
         (r"/annotations", AnnotationsHandler),
         (r"/add_annotation", AddAnnotationHandler),
-        (r"/sources", SourcesHandler)], **config)
+        (r"/sources", SourcesHandler),
+        (r"/mapdata", MapDataHandler)], **config)
 
     # start the main server
     http_server = tornado.httpserver.HTTPServer(application)

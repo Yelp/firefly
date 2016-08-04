@@ -165,8 +165,13 @@ firefly.SourceSelector.prototype._selectionChanged = function(select) {
 		}
 	} else if (leafVal) {
 		// if we just selected a file, select it
-		$(this.container).data('ff:selected-source', selectedPath);
-		$(this.container).trigger('ff:add-source', [selectedPath]);
+                if (leafNode.data_type == "map") {
+                    $(this.container).data('ff:selected-map-source', selectedPath);
+                    $(this.container).trigger('ff:add-map-source', [selectedPath]);
+                } else {
+		    $(this.container).data('ff:selected-source', selectedPath);
+		    $(this.container).trigger('ff:add-source', [selectedPath]);
+                }
 	} else {
 		// we selected the null option, and there's nothing to be done.
 	}
@@ -178,6 +183,11 @@ firefly.SourceSelector.prototype._clearCurrentSrc = function() {
 		$(this.container).trigger('ff:remove-source', [currentSrc]);
 		$(this.container).data('ff:selected-source', null);
 	}
+        var currentMapSrc = $(this.container).data('ff:selected-map-source');
+        if (currentMapSrc) {
+                $(this.container).trigger('ff:remove-map-source', [currentSrc]);
+                $(this.container).data('ff:selected-map-source', null);
+        }
 };
 
 firefly.SourceSelector.prototype._removeSourceSelector = function() {

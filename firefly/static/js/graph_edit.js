@@ -45,6 +45,10 @@ firefly.GraphEdit = function(sourceGraph, sources, makeURL, options) {
 	this.graph = new firefly.Graph(this._actualGraphEl, sources, this.makeURL_, serializedSource, availHeight-150);
 
 	var selectedSources = this.sourceGraph.getSources();
+        var selectedMapSources = this.sourceGraph.getMapSources();
+        if (selectedMapSources.length > 0) {
+            this.addSourceSelector(selectedMapSources[0]); 
+        }
 	if (selectedSources.length > 0) {
 		for (var i=0; i<selectedSources.length; i++) {
 			this.addSourceSelector(selectedSources[i]);
@@ -100,12 +104,24 @@ firefly.GraphEdit.prototype.observeEvents = function() {
 		}).index(this);
 		graphEdit.graph.addSource(key, idx);
 	});
+        $(this._container).delegate(".source-selector", "ff:add-map-source", function(evt, key) {
+		var idx = $(".source-selector").filter(function() {
+			return $(this).data('ff:selected-map-source');
+		}).index(this);
+		graphEdit.graph.addMapSource(key, idx);
+	});
 	$(this._container).delegate(".source-selector", "ff:remove-source", function(evt, key) {
 		var idx = $(".source-selector").filter(function() {
 			return $(this).data('ff:selected-source');
 		}).index(this);
 		graphEdit.graph.removeSource(idx);
 	});
+        $(this._container).delegate(".source-selector", "ff:remove-map-source", function(evt, key) {
+                var idx = $(".source-selector").filter(function() {
+                        return $(this).data('ff:selected-map-source');
+                }).index(this);
+                graphEdit.graph.removeMapSource(idx);
+        });
 
 	// handle the "add" button to add a new, blank SourceSelector
 	$(this._container).delegate('[rel=add-source-selector-below]', 'click', function(evt) {

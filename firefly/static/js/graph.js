@@ -13,6 +13,7 @@ firefly.Graph = function(container, sourcerer, makeURL, serialized, height) {
 	this._options = undefined;
 	this._title = undefined;
 	this._sources = [];
+        this._mapsources = [];
 
 	// we reserve the right to instantiate a Graph without a DOM container.
 	if (container) {
@@ -36,6 +37,7 @@ firefly.Graph.prototype.DEFAULT_ZOOM = "3600";
 firefly.Graph.prototype.serialize = function() {
 	var obj = {};
 	obj.sources = this.getSources();
+        obj.mapsources = this.getMapSources();
 	if (this._title) {
 		obj.title = this._title;
 	}
@@ -50,6 +52,7 @@ firefly.Graph.prototype.serialize = function() {
 /** sync this graph to the serialized representation passed in */
 firefly.Graph.prototype.sync = function(serialized) {
 	this.setSources([]);
+        this.setMapSources([]);
 	$(this._container).empty();
 	this._domInited = false;
 	this._graphEl = this._legendEl = this._titleEl = null;
@@ -57,9 +60,13 @@ firefly.Graph.prototype.sync = function(serialized) {
 	this.zoom = serialized.zoom || this.DEFAULT_ZOOM;
 	this._title = serialized.title || undefined;
 	this._options = serialized.options || undefined;
-	if (serialized.sources) {
+	if (serialized.mapsources != undefined && serialized.mapsources.length>0) {
+                this.setMapSources(serialized.mapsources);
+        }
+        if (serialized.sources) {
 		this.setSources(serialized.sources);
-	} else {
+	} 
+        if (!serialized.mapsources && !serialized.sources) {
 		this.setDOMAsEmpty();
 	}
 };
@@ -78,6 +85,8 @@ firefly.Graph.prototype.clear = function() {
 /** get the list of sources for this graph */
 firefly.Graph.prototype.getSources = function() {return this._sources;};
 
+firefly.Graph.prototype.getMapSources = function() {return this._mapsources;};
+
 /** helper fxn - is the sources list empty? */
 firefly.Graph.prototype.isEmpty = function() {
 	return this.renderer === null;
@@ -91,6 +100,13 @@ firefly.Graph.prototype.setSources = function(sources) {
 	this.sourcesChanged(oldSources);
 };
 
+firefly.Graph.prototype.setMapSources = function(sources) {
+        var oldMapSources = this._mapsources;
+        // do a deep-ish copy of the sources so we don't get all wonky
+        this._mapsources = $.map(sources, function(src) {return [src.slice(0)];});
+        this.mapSourcesChanged(oldMapSources);
+};
+
 /** add the key to the graph at the given index */
 firefly.Graph.prototype.addSource = function(key, idx) {
 	var oldSources = this._sources.slice(0);
@@ -98,11 +114,22 @@ firefly.Graph.prototype.addSource = function(key, idx) {
 	this.sourcesChanged(oldSources);
 };
 
+firefly.Graph.prototype.addMapSource = function(key, idx) {
+        var oldMapSources = this._mapsources.slice(0);
+        this._mapsources[0] = key;
+        this.mapSourcesChanged(oldMapSources);
+};
 /** remove the key at the given index */
 firefly.Graph.prototype.removeSource = function(idx) {
 	var oldSources = this._sources.slice(0);
 	this._sources.splice(idx, 1);
 	this.sourcesChanged(oldSources);
+};
+
+firefly.Graph.prototype.removeMapSource = function(idx) {
+        var oldSources = this._mapsources.slice(0);
+        this._mapsources.splice(idx, 1);
+        this.mapSourcesChanged(oldSources);
 };
 
 firefly.Graph.prototype.setOptions = function(opts) {
@@ -127,7 +154,7 @@ firefly.Graph.prototype.sourcesChanged = function(oldSources) {
 		this.renderer = this.getRenderer();
 		this.updateGraph();
 		this.updateTitle();
-	} else if ((oldSources.length || !this._domInited) && !this._sources.length) {
+	} else if ((oldSources.length || !this._domInited) && !this._sources.length && !this._mapsources.length) {
 		if (this.renderer) {
 			this.renderer.cleanup();
 			this.renderer = null;
@@ -137,6 +164,15 @@ firefly.Graph.prototype.sourcesChanged = function(oldSources) {
 		this.updateGraph();
 		this.updateTitle();
 	}
+};
+
+firefly.Graph.prototype.mapSourcesChanged = function(oldMapSources) {
+     //if (this.renderer == null || this.renderer == undefined) {
+         this.setDOMAsPopulated();
+         this.renderer = this.getRenderer();
+     //}
+     this.updateGraph();
+     this.updateTitle();
 };
 
 firefly.Graph.prototype.getRenderer = function() {
