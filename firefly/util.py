@@ -54,7 +54,7 @@ def verify_access_token(token, key):
     t = token[:15]
     signature = token[15:]
     expected_signature = hmac.new(key, msg=t, digestmod=hashlib.sha1).hexdigest()
-    return signature == expected_signature and int(t) >= int(time.time())
+    return hmac.compare_digest(signature, expected_signature) and int(t) >= int(time.time())
 
 def generate_access_token(key, duration=60):
     """Generate an access token valid for the given number of seconds"""
