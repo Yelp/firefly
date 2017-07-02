@@ -24,6 +24,7 @@ data_server:
     # The data sources to collect data from.
     # These are Python modules contained in data_sources/
     data_sources:
+        - data_sources.librato.Librato
         - data_sources.ganglia_rrd.GangliaRRD
         - data_sources.stat_monster_rrd.StatMonsterRRD
         # - data_sources.graphite_wsp.GraphiteWSP
@@ -48,6 +49,10 @@ data_server:
         data_sources.graphite_wsp.GraphiteWSP:
             # path to the root of Graphite whisper files
             graphite_storage: null
+        data_sources.librato.Librato:
+            librato_url: "https://metrics-api.librato.com/"
+            username: "librato_username"
+            password: "librato_password"
 
     # The location of the SQLite database file which contains the data store
     # for the DATA SERVER

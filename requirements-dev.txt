@@ -2,3 +2,4 @@
 PyHamcrest==1.8.0
 testify==0.5.2
 flake8
+requests>=2.3, <3.0
