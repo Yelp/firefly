@@ -1,4 +1,4 @@
 # The -e . syntax means to install the package in this directory as well.
 -e .
-PyYAML==3.10
+PyYAML==5.4
 tornado>= 1.1, <2.0
